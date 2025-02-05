@@ -80,7 +80,7 @@ filter_lr_single <- function(rna, sender, receiver, lr_database,
     message("Using full dataset.")
     rna.data <- rna
   }
-
+  
   # Step 2: Filter samples based on thresholds for the number of cells and samples
   message("Filtering samples with cell counts...")
   cell_counts <- table(rna.data$sample, rna.data$cell.type)
@@ -116,11 +116,11 @@ filter_lr_single <- function(rna, sender, receiver, lr_database,
   
   colnames(avg.s) <- str_match(colnames(avg.s), "^(.*)-lr-")[,2]
   colnames(avg.r) <- str_match(colnames(avg.r), "^(.*)-lr-")[,2]
-
-  avg.r <- avg.r[,colnames(avg.s)]
   
-  avg.s <- avg.s[lr$ligand_gene_symbol,]
-  avg.r <- avg.r[lr$receptor_gene_symbol,]
+  avg.r <- avg.r[, colnames(avg.s), drop = FALSE]
+  
+  avg.s <- avg.s[lr$ligand_gene_symbol, , drop = FALSE]
+  avg.r <- avg.r[lr$receptor_gene_symbol, , drop = FALSE]
   
   # Step 5: Compute correlations between ligand-receptor pairs
   message("Starting correlation and filtering process for ligand-receptor pairs...")
@@ -142,9 +142,6 @@ filter_lr_single <- function(rna, sender, receiver, lr_database,
       
       pct1 <- sum(p > 0) / length(p)
       pct2 <- sum(q > 0) / length(q)
-      
-      # p[p == 0] = NA
-      # q[q == 0] = NA
       
       res.cor <- cor.test(p, q, method = cor_method)
       
@@ -194,7 +191,7 @@ filter_lr_all <- function(rna, lr_database,
                           cor_method = "spearman", adjust_method = "BH",
                           min_adjust_p = 0.05, min_cor = 0, min_pct = 0.1,
                           mc_cores = 10) {
-
+  
   # Check parameters
   max_cores <- parallel::detectCores()
   if (mc_cores > max_cores) {
@@ -202,22 +199,22 @@ filter_lr_all <- function(rna, lr_database,
     message("Using ", max_cores - 1, " cores instead of requested ", mc_cores)
     mc_cores <- max_cores - 1
   }
-
+  
   # Pre-process metadata
   rna$sample <- rna@meta.data[,sample_col]
   rna$cell.type <- rna@meta.data[,cell_type_col]
   cell_types <- unique(rna@meta.data[[cell_type_col]])
   if (length(cell_types) < 1) stop("No cell types found.")
-
+  
   message("Analyzing ligand-receptor interactions between all cell types...")
   message("\nCell types: ", paste(cell_types, collapse = ", "))
-
+  
   all_results <- list()
-
+  
   # Step 1: Filter for ligand-receptor interactions where the same cell type is both sender and receiver
   message("\nProcessing same cell type pairs...")
   same_ct_res <- lapply(cell_types, function(ct) {
-    message("\n\n  Analyzing ", ct, " <-> ", ct)
+    message("\n\n  Analyzing pair: ", ct, " <-> ", ct)
     res <- filter_lr_single(
       rna = rna,
       sender = ct,
@@ -234,7 +231,7 @@ filter_lr_all <- function(rna, lr_database,
       min_pct = min_pct,
       mc_cores = mc_cores
     )
-
+    
     if (!is.null(res) && nrow(res) > 0) {
       return(res)
     } else {
@@ -242,21 +239,21 @@ filter_lr_all <- function(rna, lr_database,
     }
   })
   same_ct_res <- Filter(Negate(is.null), same_ct_res)
-
+  
   # Step 2: Filter for ligand-receptor interactions where sender and receiver are different cell types
   message("\n\n\nProcessing different cell type pairs...")
   unique_pairs <- combn(cell_types, 2, simplify = FALSE)
-
+  
   diff_ct_res <- lapply(unique_pairs, function(pair) {
     ct1 <- pair[1]
     ct2 <- pair[2]
     message("\n\n  Analyzing pair: ", ct1, " <-> ", ct2)
-
+    
     # subset data
     message("Subsetting data for selected cell types: ", ct1, " and ", ct2)
     rna_subset <- subset(rna, cell.type %in% c(ct1, ct2))
     if (length(unique(rna_subset$cell.type)) < 2) return(NULL)
-
+    
     # ct1 -> ct2
     res1 <- filter_lr_single(
       rna = rna_subset,
@@ -274,7 +271,7 @@ filter_lr_all <- function(rna, lr_database,
       min_pct = min_pct,
       mc_cores = mc_cores
     )
-
+    
     # ct2 -> ct1
     res2 <- filter_lr_single(
       rna = rna_subset,
@@ -292,10 +289,10 @@ filter_lr_all <- function(rna, lr_database,
       min_pct = min_pct,
       mc_cores = mc_cores
     )
-
+    
     filtered_list <- list(res1, res2) %>%
       Filter(f = function(x) !is.null(x) && nrow(x) > 0)
-
+    
     if (length(filtered_list) > 0) {
       return(filtered_list)
     } else {
@@ -303,18 +300,18 @@ filter_lr_all <- function(rna, lr_database,
     }
   })
   diff_ct_res <- unlist(diff_ct_res, recursive = FALSE)
-
+  
   final_res <- bind_rows(c(same_ct_res, diff_ct_res))
-
+  
   # Check if the filtered result is empty
   if (nrow(final_res) == 0) {
     message("\n\nNo results meet the filtering criteria. Returning NULL.")
     return(NULL)
   }
-
+  
   message("\n\nAll cell types filter and correlation process complete.")
   message("Head of final results (", nrow(final_res), "):")
   print(head(final_res))
-
+  
   return(final_res)
 }
