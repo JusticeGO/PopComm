@@ -1,3 +1,4 @@
+# utilities
 remove_outlier <- function(data) {
   Q1_x <- quantile(data$x, 0.25, na.rm = TRUE)
   Q3_x <- quantile(data$x, 0.75, na.rm = TRUE)
