@@ -1,5 +1,5 @@
 # 02_analyze_projection
-# This function calculates the projection scores for ligand-receptor (LR) pairs between specified sender and receiver cell types, or across all possible cell type pairs. 
+# This function calculates the projection scores for ligand-receptor (LR) pairs between specified sender and receiver cell types. 
 # The projection score is computed based on linear regression models, measuring the normalized distance of each sample's LR expression 
 # from the regression line.
 # 
@@ -25,10 +25,10 @@
 
 
 
-lr_projection_single <- function(rna, sender, receiver, lr_custom, 
-                                 sample_col, cell_type_col, 
-                                 min_cells = 50, min_samples = 10,
-                                 mc_cores = 10) {
+score_lr_single <- function(rna, sender, receiver, lr_custom, 
+                            sample_col, cell_type_col, 
+                            min_cells = 50, min_samples = 10,
+                            mc_cores = 10) {
   
   # Check parameters
   max_cores <- parallel::detectCores()
@@ -54,10 +54,9 @@ lr_projection_single <- function(rna, sender, receiver, lr_custom,
   message("\nAnalyzing ligand-receptor projection scores: ", sender, " -> ", receiver)
   # Determine the subset of data
   if (!setequal(selected_types, cell_types)) {
-    message("Subsetting ", sender, " (sender) and ", receiver, " (receiver).")
+    message("Subsetting ", sender, " (sender) and ", receiver, " (receiver)...")
     rna.data <- subset(rna, cell.type %in% selected_types)
   } else {
-    message("Using full dataset.")
     rna.data <- rna
   }
   
@@ -103,7 +102,7 @@ lr_projection_single <- function(rna, sender, receiver, lr_custom,
   avg.r <- avg.r[lr$receptor, , drop = FALSE]
   
   # Step 5: Calculating projection scores
-  message("Calculating projection scores...")
+  message("Calculating scores...")
   score.df <- pbmclapply(
     1:nrow(avg.s), function(i) {
       x <- as.numeric(avg.s[lr$ligand[i], ])
@@ -137,7 +136,7 @@ lr_projection_single <- function(rna, sender, receiver, lr_custom,
       data.frame(
         lr_metadata,
         sample = colnames(avg.s),
-        normalized_score = normalized.score,
+        normalized_score = round(normalized.score, 5),
         row.names = NULL
       )
     }, 
@@ -156,10 +155,10 @@ lr_projection_single <- function(rna, sender, receiver, lr_custom,
 
 
 
-lr_projection_all <- function(rna, lr_custom,
-                              sample_col, cell_type_col,
-                              min_cells = 50, min_samples = 10,
-                              mc_cores = 10) {
+score_lr_all <- function(rna, lr_custom,
+                         sample_col, cell_type_col,
+                         min_cells = 50, min_samples = 10,
+                         mc_cores = 10) {
   
   # Check parameters
   max_cores <- parallel::detectCores()
@@ -191,11 +190,12 @@ lr_projection_all <- function(rna, lr_custom,
     }
   }
   
-  # Step 1: Calculate the projection scores for ligand-receptor (LR) pairs
+  # Calculate the projection scores for ligand-receptor (LR) pairs
   res_list <- lapply(split_data, function(lr_s) {
     sender <- lr_s$sender[1]
     receiver <- lr_s$receiver[1]
-    res <- lr_projection_single(
+    message("\n", sender, " -> ", receiver)
+    res <- score_lr_single(
       rna = rna,
       sender = sender,
       receiver = receiver,
