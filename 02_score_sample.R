@@ -19,6 +19,7 @@
 #   A data frame containing projection scores for each sample and LR pair, with the following columns:
 #    - All columns from the input `lr_custom`.
 #    - sample: Sample identifier.
+#    - score: Projection score indicating the co-expression intensity of the LR pair in the sample.
 #    - normalized_score: Normalized projection score (range 0-1) indicating the relative co-expression intensity of the LR pair in the sample.
 #   Rows are ordered by `lr_custom`. 
 #   Returns NULL if no valid pairs are found.
@@ -102,7 +103,7 @@ score_lr_single <- function(rna, sender, receiver, lr_custom,
   avg.r <- avg.r[lr$receptor, , drop = FALSE]
   
   # Step 5: Calculating projection scores
-  message("Calculating scores...")
+  message("Calculating projection scores...")
   score.df <- pbmclapply(
     1:nrow(avg.s), function(i) {
       x <- as.numeric(avg.s[lr$ligand[i], ])
@@ -129,13 +130,14 @@ score_lr_single <- function(rna, sender, receiver, lr_custom,
       
       dx <- projections[, 1] - min(projections[, 1])
       dy <- projections[, 2] - min(projections[, 2])
-      score <- sqrt(dx^2 + dy^2)
+      score <- round(sqrt(dx^2 + dy^2), 5)
       normalized.score <- score / max(score)
       
       lr_metadata <- lr[i, ]
       data.frame(
         lr_metadata,
         sample = colnames(avg.s),
+        score = score,
         normalized_score = round(normalized.score, 5),
         row.names = NULL
       )
@@ -194,7 +196,6 @@ score_lr_all <- function(rna, lr_custom,
   res_list <- lapply(split_data, function(lr_s) {
     sender <- lr_s$sender[1]
     receiver <- lr_s$receiver[1]
-    message("\n", sender, " -> ", receiver)
     res <- score_lr_single(
       rna = rna,
       sender = sender,
