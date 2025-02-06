@@ -74,10 +74,9 @@ filter_lr_single <- function(rna, sender, receiver, lr_database,
   
   # Determine the subset of data
   if (!setequal(selected_types, cell_types)) {
-    message("Subsetting ", sender, " (sender) and ", receiver, " (receiver).")
+    message("Subsetting ", sender, " (sender) and ", receiver, " (receiver)...")
     rna.data <- subset(rna, cell.type %in% selected_types)
   } else {
-    message("Using full dataset.")
     rna.data <- rna
   }
   
@@ -110,6 +109,7 @@ filter_lr_single <- function(rna, sender, receiver, lr_database,
   rna.data$group <- paste0(rna.data$sample, "-lr-", rna.data$cell.type)
   message("Computing average expression for each sample-cell type group...")
   rna.avg <- AverageExpression(rna.data, group.by = "group")$RNA
+  rna.avg <- round(rna.avg, 5)
   
   avg.s <- rna.avg[, grep(sender, colnames(rna.avg))]
   avg.r <- rna.avg[, grep(receiver, colnames(rna.avg))]
@@ -133,28 +133,33 @@ filter_lr_single <- function(rna, sender, receiver, lr_database,
       data <- data.frame(x = avg.s[i,], y = avg.r[i,])
       data <- remove_outlier(data)
       
-      if (dim(data)[1] < min_samples) {
-        return(c(NA, 1, 0, 0))
-      }
-      
       p <- data$x
       q <- data$y
+      
+      if (dim(data)[1] < min_samples || sum(p) == 0 || sum(q) == 0) {
+        return(NULL)
+      }
       
       pct1 <- sum(p > 0) / length(p)
       pct2 <- sum(q > 0) / length(q)
       
       res.cor <- cor.test(p, q, method = cor_method)
       
-      return(c(res.cor$estimate, res.cor$p.value, pct1, pct2))
+      lr <- paste0(row.names(avg.s)[i], "_", row.names(avg.r)[i])
+      return(c(round(res.cor$estimate, 5), round(res.cor$p.value, 15), round(pct1, 3), round(pct2, 3), lr))
     }, mc.cores = mc_cores
   )
   
   res <- do.call(rbind, res)
   res <- data.frame(res)
-  colnames(res) <- c(cor_colname, p_colname, "pct1", "pct2")
   
-  res$lr <- paste0(lr$ligand_gene_symbol, "_", lr$receptor_gene_symbol)
-  res$adjust.p <- p.adjust(res[[p_colname]], method = adjust_method)
+  colnames(res) <- c(cor_colname, p_colname, "pct1", "pct2", "lr")
+  res$cor_spearman <- as.numeric(res$cor_spearman)
+  res$p_spearman <- as.numeric(res$p_spearman)
+  res$pct1 <- as.numeric(res$pct1)
+  res$pct2 <- as.numeric(res$pct2)
+  
+  res$adjust.p <- round(p.adjust(res[[p_colname]], method = adjust_method), 15)
   
   # Step 6: Filter the results based on adjusted p-value, correlation, and percentage thresholds
   message("Filtering results based on adjusted p-value, correlation, and percentage thresholds...")
