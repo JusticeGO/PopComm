@@ -168,7 +168,9 @@ filter_lr_single <- function(rna, sender, receiver, lr_database,
                      res$pct1 > min_pct & 
                      res$pct2 > min_pct),]
   res <- res[order(res$adjust.p, -res[[cor_colname]]),]
-  row.names(res) <- 1:nrow(res)
+  if (nrow(res) > 0) {
+    row.names(res) <- 1:nrow(res)
+  }
   
   # Check if the filtered result is empty
   if (nrow(res) == 0) {
