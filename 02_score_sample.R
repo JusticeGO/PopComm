@@ -1,5 +1,5 @@
 # 02_analyze_projection
-# This function calculates the projection scores for ligand-receptor (LR) pairs between specified sender and receiver cell types. 
+# This function calculates the projection scores for ligand-receptor (LR) pairs between specified sender and receiver cell types, or across all possible cell type pairs. 
 # The projection score is computed based on linear regression models, measuring the normalized distance of each sample's LR expression 
 # from the regression line.
 # 
@@ -25,11 +25,10 @@
 
 
 
-analyze_lr_projection <- function(rna, sender, receiver, lr_custom, 
-                                  sample_col, cell_type_col, 
-                                  min_cells = 50, min_samples = 10,
-                                  mc_cores = 10) {
-  
+lr_projection_single <- function(rna, sender, receiver, lr_custom, 
+                                 sample_col, cell_type_col, 
+                                 min_cells = 50, min_samples = 10,
+                                 mc_cores = 10) {
   
   # Check parameters
   max_cores <- parallel::detectCores()
@@ -52,7 +51,7 @@ analyze_lr_projection <- function(rna, sender, receiver, lr_custom,
   }
   
   # Step 1: Add sample and cell type columns to the RNA data object and subset
-  message("\nAnalyzing ligand-receptor projection score: ", sender, " -> ", receiver)
+  message("\nAnalyzing ligand-receptor projection scores: ", sender, " -> ", receiver)
   # Determine the subset of data
   if (!setequal(selected_types, cell_types)) {
     message("Subsetting ", sender, " (sender) and ", receiver, " (receiver).")
@@ -98,11 +97,11 @@ analyze_lr_projection <- function(rna, sender, receiver, lr_custom,
   colnames(avg.s) <- str_match(colnames(avg.s), "^(.*)-lr-")[,2]
   colnames(avg.r) <- str_match(colnames(avg.r), "^(.*)-lr-")[,2]
   
-  avg.r <- avg.r[,colnames(avg.s)]
+  avg.r <- avg.r[, colnames(avg.s), drop = FALSE]
   
-  avg.s <- avg.s[lr$ligand,]
-  avg.r <- avg.r[lr$receptor,]
-
+  avg.s <- avg.s[lr$ligand, , drop = FALSE]
+  avg.r <- avg.r[lr$receptor, , drop = FALSE]
+  
   # Step 5: Calculating projection scores
   message("Calculating projection scores...")
   score.df <- pbmclapply(
@@ -147,9 +146,79 @@ analyze_lr_projection <- function(rna, sender, receiver, lr_custom,
     bind_rows() %>%
     na.omit()
   
-  message("\n\nAnalyzing ligand-receptor projection score process complete.")
+  message("Analyzing ligand-receptor projection scores process complete.")
   message("Head of final results (", nrow(score.df), "):")
   print(head(score.df))
   
   return(score.df)
+}
+
+
+
+
+lr_projection_all <- function(rna, lr_custom,
+                              sample_col, cell_type_col,
+                              min_cells = 50, min_samples = 10,
+                              mc_cores = 10) {
+  
+  # Check parameters
+  max_cores <- parallel::detectCores()
+  if (mc_cores > max_cores) {
+    message("Warning: Using more cores (", mc_cores, ") than available (", max_cores, ").")
+    message("Using ", max_cores - 1, " cores instead of requested ", mc_cores)
+    mc_cores <- max_cores - 1
+  }
+  
+  # Pre-process metadata
+  rna$sample <- rna@meta.data[,sample_col]
+  rna$cell.type <- rna@meta.data[,cell_type_col]
+  cell_types <- unique(rna@meta.data[[cell_type_col]])
+  if (length(cell_types) < 1) stop("No cell types found.")
+  
+  message("Analyzing ligand-receptor projection scores between all cell types...")
+  message("\nCell types: ", paste(cell_types, collapse = ", "))
+  
+  all_results <- list()
+  
+  # split lr_custom data
+  split_data <- list()
+  for (i in 1:nrow(lr_custom)) {
+    sender <- lr_custom$sender[i]
+    receiver <- lr_custom$receiver[i]
+    combination_name <- paste(sender, receiver, sep = "_")
+    if (!combination_name %in% names(split_data)) {
+      split_data[[combination_name]] <- lr_custom[lr_custom$sender == sender & lr_custom$receiver == receiver, ]
+    }
+  }
+  
+  # Step 1: Calculate the projection scores for ligand-receptor (LR) pairs
+  res_list <- lapply(split_data, function(lr_s) {
+    sender <- lr_s$sender[1]
+    receiver <- lr_s$receiver[1]
+    res <- lr_projection_single(
+      rna = rna,
+      sender = sender,
+      receiver = receiver,
+      lr_custom = lr_s,
+      sample_col = sample_col,
+      cell_type_col = cell_type_col,
+      min_cells = min_cells,
+      min_samples = min_samples,
+      mc_cores = mc_cores
+    )
+    
+    if (!is.null(res) && nrow(res) > 0) {
+      return(res)
+    } else {
+      return(NULL)
+    }
+  })
+  res_list <- Filter(Negate(is.null), res_list)
+  final_res <- bind_rows(res_list)
+  
+  message("\n\nAll cell types analyzing ligand-receptor projection scores process complete.")
+  message("Head of final results (", nrow(final_res), "):")
+  print(head(final_res))
+  
+  return(final_res)
 }
