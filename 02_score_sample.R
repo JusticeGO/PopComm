@@ -90,6 +90,7 @@ score_lr_single <- function(rna, sender, receiver, lr_custom,
   rna.data$group <- paste0(rna.data$sample, "-lr-", rna.data$cell.type)
   message("Computing average expression for each sample-cell type group...")
   rna.avg <- AverageExpression(rna.data, group.by = "group")$RNA
+  rna.avg <- round(rna.avg, 5)
   
   avg.s <- rna.avg[, grep(sender, colnames(rna.avg))]
   avg.r <- rna.avg[, grep(receiver, colnames(rna.avg))]
@@ -120,8 +121,8 @@ score_lr_single <- function(rna, sender, receiver, lr_custom,
       
       if (is.null(model)) return(data.frame())
       
-      slope <- coef(model)[2]
-      intercept <- coef(model)[1]
+      slope <- round(coef(model)[2], 5)
+      intercept <- round(coef(model)[1], 5)
       
       projections <- t(sapply(
         1:length(x),
@@ -134,13 +135,24 @@ score_lr_single <- function(rna, sender, receiver, lr_custom,
       normalized.score <- score / max(score)
       
       lr_metadata <- lr[i, ]
-      data.frame(
+      # data.frame(
+      #   lr_metadata,
+      #   sample = colnames(avg.s),
+      #   score = score,
+      #   normalized_score = round(normalized.score, 5),
+      #   row.names = NULL
+      # )
+      result <- data.frame(
         lr_metadata,
         sample = colnames(avg.s),
         score = score,
         normalized_score = round(normalized.score, 5),
         row.names = NULL
       )
+      
+      result <- result[order(-result$score), ]
+      
+      return(result)
     }, 
     mc.cores = mc_cores
   ) %>% 
@@ -201,8 +213,8 @@ score_lr_all <- function(rna, lr_custom,
       sender = sender,
       receiver = receiver,
       lr_custom = lr_s,
-      sample_col = sample_col,
-      cell_type_col = cell_type_col,
+      sample_col = "sample",
+      cell_type_col = "cell.type",
       min_cells = min_cells,
       min_samples = min_samples,
       mc_cores = mc_cores

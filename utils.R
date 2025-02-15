@@ -17,7 +17,7 @@ remove_outlier <- function(data) {
   # Identify non-outliers
   non_outliers <- (data$x > lower_bound_x) & (data$x < upper_bound_x) &
     (data$y > lower_bound_y) & (data$y < upper_bound_y)
-
+  
   # Filter data to remove outliers
   data_clean <- data[non_outliers, ]
   return(data_clean)
@@ -26,6 +26,8 @@ remove_outlier <- function(data) {
 
 project_to_line <- function(x, y, slope, intercept) {
   x_proj <- (x + slope * y - slope * intercept) / (slope^2 + 1)
+  x_proj <- round(x_proj, 5)
   y_proj <- slope * x_proj + intercept
+  y_proj <- round(y_proj, 5)
   return(c(x_proj, y_proj))
 }

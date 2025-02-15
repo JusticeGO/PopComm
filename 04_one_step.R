@@ -1,4 +1,4 @@
-# 01_filter_interaction
+# One step
 # This function analyzes the ligand-receptor (LR) pair correlations for specified sender and receiver cell types, or across all possible cell type pairs. 
 # It filters out low-quality samples and performs statistical analysis of correlation based on average gene expression. 
 # Users can specify multiple filtering thresholds, including for correlation, adjust p-values, and percentage. 
@@ -42,7 +42,7 @@
 
 
 
-filter_lr_single <- function(rna, sender, receiver, lr_database, 
+one_step_single <- function(rna, sender, receiver, lr_database, 
                              sample_col, cell_type_col, 
                              min_cells = 50, min_samples = 10, 
                              cor_method = "spearman", adjust_method = "BH", 
@@ -228,8 +228,8 @@ filter_lr_all <- function(rna, lr_database,
       sender = ct,
       receiver = ct,
       lr_database = lr_database,
-      sample_col = "sample",
-      cell_type_col = "cell.type",
+      sample_col = sample_col,
+      cell_type_col = cell_type_col,
       min_cells = min_cells,
       min_samples = min_samples,
       cor_method = cor_method,
@@ -268,8 +268,8 @@ filter_lr_all <- function(rna, lr_database,
       sender = ct1,
       receiver = ct2,
       lr_database = lr_database,
-      sample_col = "sample",
-      cell_type_col = "cell.type",
+      sample_col = sample_col,
+      cell_type_col = cell_type_col,
       min_cells = min_cells,
       min_samples = min_samples,
       cor_method = cor_method,
@@ -286,8 +286,8 @@ filter_lr_all <- function(rna, lr_database,
       sender = ct2,
       receiver = ct1,
       lr_database = lr_database,
-      sample_col = "sample",
-      cell_type_col = "cell.type",
+      sample_col = sample_col,
+      cell_type_col = cell_type_col,
       min_cells = min_cells,
       min_samples = min_samples,
       cor_method = cor_method,
