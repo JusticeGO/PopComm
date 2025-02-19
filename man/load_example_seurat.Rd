@@ -17,8 +17,10 @@ A \code{\link[Seurat]{Seurat}} object with the following slots:
 }
 }
 \source{
-Artificially generated using simulated single-cell RNA data via the
-\code{Seurat::SimulateSCData()} function for demonstration purposes.
+Subset of snRNA-seq data analyzed in our study,
+processed via standard workflow (see manuscript for details).
+Full dataset available at \href{https://zenodo.org/record/XXXXX}{Zenodo}
+(DOI: 10.XXXX/zenodo.XXXXX).
 }
 \usage{
 load_example_seurat()
@@ -29,3 +31,4 @@ and testing purposes across functions in the PopComm package. The object include
 expression data, metadata with sample and cell type annotations, and basic preprocessing
 steps (e.g., dimensionality reduction).
 }
+\keyword{internal}

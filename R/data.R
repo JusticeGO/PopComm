@@ -39,8 +39,11 @@
 #'   }
 #'   \item{reductions}{PCA and UMAP embeddings for visualization.}
 #' }
-#' @source Artificially generated using simulated single-cell RNA data via the
-#' \code{Seurat::SimulateSCData()} function for demonstration purposes.
+#' @source Subset of snRNA-seq data analyzed in our study,
+#' processed via standard workflow (see manuscript for details).
+#' Full dataset available at \href{https://zenodo.org/record/XXXXX}{Zenodo}
+#' (DOI: 10.XXXX/zenodo.XXXXX).
+#' @keywords internal
 #' @export
 load_example_seurat <- function() {
   url <- "https://sandbox.zenodo.org/records/167208/files/example_seurat_obj.rds"

@@ -1,6 +1,6 @@
 Package: PopComm
 Title: Population-Level Cell Communication Analysis
-Version: 0.0.0.9001
+Version: 0.0.1.0
 Authors@R: 
     person("Zheng", "Gong", , "gongzheng131@hotmail.com", role = c("aut", "cre"),
            comment = c(ORCID = "0000-0001-7285-2630"))
