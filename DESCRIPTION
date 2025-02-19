@@ -1,12 +1,31 @@
 Package: PopComm
-Title: What the Package Does (One Line, Title Case)
-Version: 0.0.0.9000
+Title: Population-Level Cell Communication Analysis
+Version: 0.0.0.9001
 Authors@R: 
-    person("First", "Last", , "first.last@example.com", role = c("aut", "cre"),
-           comment = c(ORCID = "YOUR-ORCID-ID"))
-Description: What the package does (one paragraph).
-License: `use_mit_license()`, `use_gpl3_license()` or friends to pick a
-    license
+    person("Zheng", "Gong", , "gongzheng131@hotmail.com", role = c("aut", "cre"),
+           comment = c(ORCID = "0000-0001-7285-2630"))
+Description: Facilitates population-level analysis of ligand-receptor interactions 
+    using large-scale single-cell transcriptomic data. Identifies significant LR pairs 
+    and quantifies their interactions through correlation-based filtering and projection score 
+    computations. Designed for large-sample single-cell studies, the package employs 
+    statistical modeling, including linear regression, to investigate LR relationships 
+    between cell types. It provides a systematic framework for understanding cell-cell 
+    communication, uncovering regulatory interactions and signaling mechanisms. 
+    Future updates will enhance visualization and downstream analyses for improved biological interpretation.
+URL: https://github.com/JusticeGO/PopComm
+BugReports: https://github.com/JusticeGO/PopComm/issues
+biocViews:
+Depends:
+    R (>= 4.0.0)
+Imports:
+    Seurat (>= 4.1.0),
+    parallel,
+    pbmcapply (>= 1.5.0),
+    stringr,
+    dplyr (>= 1.0.0),
+    magrittr (>= 2.0.0),
+License: MIT + file LICENSE
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.2.3
+LazyData: true
