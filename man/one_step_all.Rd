@@ -77,6 +77,7 @@ res_all <- one_step_all(
   sample_col = "sample",
   cell_type_col = "cell.type",
   min_cells = 20,
+  min_samples = 10,
   min_adjust_p = 0.5,
   mc_cores = 1
 )

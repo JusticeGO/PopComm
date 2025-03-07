@@ -44,7 +44,8 @@
 #'   sample_col = "sample",
 #'   cell_type_col = "cell.type",
 #'   min_cells = 20,
-#'   min_adjust_p = 0.5,
+#'   min_samples = 10,
+#'   min_adjust_p = 0.05,
 #'   mc_cores = 1
 #' )
 #'
@@ -57,6 +58,7 @@
 #'   sample_col = "sample",
 #'   cell_type_col = "cell.type",
 #'   min_cells = 20,
+#'   min_samples = 10,
 #'   mc_cores = 1
 #' )
 score_lr_single <- function(rna, sender, receiver, lr_custom,
@@ -286,6 +288,7 @@ score_lr_single <- function(rna, sender, receiver, lr_custom,
 #'   sample_col = "sample",
 #'   cell_type_col = "cell.type",
 #'   min_cells = 20,
+#'   min_samples = 10,
 #'   min_adjust_p = 0.5,
 #'   mc_cores = 1
 #' )
@@ -297,6 +300,7 @@ score_lr_single <- function(rna, sender, receiver, lr_custom,
 #'   sample_col = "sample",
 #'   cell_type_col = "cell.type",
 #'   min_cells = 20,
+#'   min_samples = 10,
 #'   mc_cores = 1
 #' )
 score_lr_all <- function(rna, lr_custom,

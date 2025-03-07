@@ -64,7 +64,8 @@ result01s <- filter_lr_single(
   sample_col = "sample",
   cell_type_col = "cell.type",
   min_cells = 20,
-  min_adjust_p = 0.5,
+  min_samples = 10,
+  min_adjust_p = 0.05,
   mc_cores = 1
 )
 
@@ -77,6 +78,7 @@ result02s <- score_lr_single(
   sample_col = "sample",
   cell_type_col = "cell.type",
   min_cells = 20,
+  min_samples = 10,
   mc_cores = 1
 )
 }
