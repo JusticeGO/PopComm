@@ -1,3 +1,43 @@
+#' Run Parallel Processing
+#'
+#' @description
+#' This function runs a given function in parallel over a set of iterations.
+#' It automatically detects the operating system and uses either `parallel::parLapply`
+#' for Windows or `pbmcapply::pbmclapply` for other systems (like Linux or macOS).
+#' This function is used to speed up computations by dividing tasks across multiple cores.
+#'
+#' @param iterations A numeric vector or list of iterations (usually indices) over which the function should be applied.
+#' @param FUN A function that takes a single argument and returns a result. This function will be applied to each element in `iterations`.
+#' @param mc_cores An integer specifying the number of cores to be used for parallel processing. Defaults to 1 for serial processing.
+#'
+#' @return A list of results, each corresponding to the output of applying `FUN` to each iteration in `iterations`.
+#'
+#' @importFrom parallel makeCluster parLapply stopCluster
+#' @importFrom pbmcapply pbmclapply
+#'
+#' @examples
+#' # Example of using run_parallel to apply a function in parallel
+#' iterations <- 1:10
+#' result <- run_parallel(iterations, function(i) { return(i^2) }, mc_cores = 1)
+#' print(result)
+#'
+#' @keywords internal
+#' @noRd
+run_parallel <- function(iterations, FUN, mc_cores = 1) {
+  # Check if the operating system is Windows
+  if (Sys.info()["sysname"] == "Windows") {
+    # For Windows, create a cluster and use parallel::parLapply
+    cl <- parallel::makeCluster(mc_cores)
+    on.exit(parallel::stopCluster(cl))
+    result <- parallel::parLapply(cl, iterations, FUN)
+  } else {
+    # For other operating systems, use pbmcapply::pbmclapply for parallel processing
+    result <- pbmcapply::pbmclapply(iterations, FUN, mc.cores = mc_cores)
+  }
+  return(result)
+}
+
+
 #' Remove Outliers from Data
 #'
 #' @description

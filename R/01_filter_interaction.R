@@ -33,7 +33,7 @@
 #' @export
 #'
 #' @importFrom magrittr %>%
-#' @importFrom stats cor.test p.adjust
+#' @importFrom stats lm sd coef cor.test p.adjust
 #' @importFrom utils head
 #'
 #' @examples
@@ -81,7 +81,7 @@ filter_lr_single <- function(rna, sender, receiver, lr_database = PopComm::lr_db
   }
 
   # Step 1: Add sample and cell type columns to the RNA data object and subset
-  message("\nAnalyzing ligand-receptor interactions: ", sender, " -> ", receiver)
+  message("Analyzing ligand-receptor interactions: ", sender, " -> ", receiver)
 
   # Determine the subset of data
   if (!setequal(selected_types, cell_types)) {
@@ -92,18 +92,18 @@ filter_lr_single <- function(rna, sender, receiver, lr_database = PopComm::lr_db
     rna.data <- rna
   }
 
-  # Step 2: Filter samples based on thresholds for the number of cells and samples
+  # Step 2: Filter samples based on cell counts per sample
   message("Filtering samples with cell counts...")
   cell_counts <- table(rna.data$sample, rna.data$cell.type)
   if (sender != receiver) {
     valid_samples <- names(which(
       cell_counts[, sender] > min_cells &
         cell_counts[, receiver] > min_cells
-    ))
+      ))
   } else {
     valid_samples <- names(which(
       cell_counts[, sender] > min_cells
-    ))
+      ))
   }
   message("Remaining samples after filtering: ", length(valid_samples))
   if (length(valid_samples) < min_samples) {
@@ -114,8 +114,8 @@ filter_lr_single <- function(rna, sender, receiver, lr_database = PopComm::lr_db
 
   # Step 3: Filter ligand-receptor pairs that exist in RNA data
   lr <- lr_database
-  lr <- lr[which(lr$ligand_gene_symbol %in% rownames(rna.data)),]
-  lr <- lr[which(lr$receptor_gene_symbol %in% rownames(rna.data)),]
+  lr <- lr[which(lr$ligand_gene_symbol %in% rownames(rna.data)), ]
+  lr <- lr[which(lr$receptor_gene_symbol %in% rownames(rna.data)), ]
 
   # Step 4: Compute average expression for each sample-cell type group
   rna.data$group <- paste0(rna.data$sample, "-lr-", rna.data$cell.type)
@@ -140,61 +140,66 @@ filter_lr_single <- function(rna, sender, receiver, lr_database = PopComm::lr_db
   cor_colname <- paste0("cor_", cor_method)
   p_colname <- paste0("p_", cor_method)
 
-  # Check the operating system and use appropriate parallel function
-  if (Sys.info()["sysname"] == "Windows") {
-    # Use parLapply on Windows
-    cl <- parallel::makeCluster(mc_cores)
-    res <- parallel::parLapply(cl, 1:nrow(avg.r), function(i) {
-      data <- data.frame(x = avg.s[i,], y = avg.r[i,])
-      data <- remove_outlier(data)
+  # Calculate correlation and linear models
+  calc_correlation <- function(i) {
+    x <- as.numeric(avg.s[lr$ligand_gene_symbol[i], ])
+    y <- as.numeric(avg.r[lr$receptor_gene_symbol[i], ])
 
-      p <- data$x
-      q <- data$y
+    if (sd(x) == 0 || sd(y) == 0) {
+      return(NULL)
+    }
 
-      if (dim(data)[1] < min_samples || sum(p) == 0 || sum(q) == 0) {
-        return(NULL)
-      }
+    # Fitting Linear Models
+    model <- tryCatch(
+      lm(y ~ x),
+      error = function(e) NULL
+    )
 
-      pct1 <- sum(p > 0) / length(p)
-      pct2 <- sum(q > 0) / length(q)
+    if (is.null(model)) return(NULL)
 
-      res.cor <- cor.test(p, q, method = cor_method)
+    slope <- round(coef(model)[2], 5)
+    intercept <- round(coef(model)[1], 5)
 
-      lr <- paste0(row.names(avg.s)[i], "_", row.names(avg.r)[i])
-      return(c(round(res.cor$estimate, 5), round(res.cor$p.value, 15), round(pct1, 3), round(pct2, 3), lr))
-    })
-    parallel::stopCluster(cl)
-  } else {
-    # Use pbmclapply for Linux systems
-    res <- pbmcapply::pbmclapply(1:nrow(avg.r), function(i) {
-      data <- data.frame(x = avg.s[i,], y = avg.r[i,])
-      data <- remove_outlier(data)
+    # filter ligand-receptor
+    data_df <- data.frame(x = x, y = y)
+    data_df <- remove_outlier(data_df)
+    p <- data_df$x
+    q <- data_df$y
 
-      p <- data$x
-      q <- data$y
+    if (nrow(data_df) < min_samples || sum(p) == 0 || sum(q) == 0) {
+      return(NULL)
+    }
 
-      if (dim(data)[1] < min_samples || sum(p) == 0 || sum(q) == 0) {
-        return(NULL)
-      }
+    pct1 <- round(sum(p > 0) / length(p), 3)
+    pct2 <- round(sum(q > 0) / length(q), 3)
 
-      pct1 <- sum(p > 0) / length(p)
-      pct2 <- sum(q > 0) / length(q)
+    res_cor <- tryCatch(cor.test(p, q, method = cor_method), error = function(e) NULL)
+    if (is.null(res_cor)) return(NULL)
 
-      res.cor <- cor.test(p, q, method = cor_method)
+    lr_name <- paste0(row.names(avg.s)[i], "_", row.names(avg.r)[i])
 
-      lr <- paste0(row.names(avg.s)[i], "_", row.names(avg.r)[i])
-      return(c(round(res.cor$estimate, 5), round(res.cor$p.value, 15), round(pct1, 3), round(pct2, 3), lr))
-    }, mc.cores = mc_cores)
+    return(c(
+      round(res_cor$estimate, 5),
+      round(res_cor$p.value, 15),
+      pct1, pct2,
+      lr_name,
+      slope, intercept,
+      length(valid_samples),
+      length(p)
+    ))
   }
 
-  res <- do.call(rbind, res)
-  res <- data.frame(res)
+  res_list <- run_parallel(1:nrow(avg.r), calc_correlation, mc_cores = mc_cores)
+  res_mat <- do.call(rbind, res_list)
+  if (is.null(res_mat)) {
+    message("No valid ligand-receptor pairs passed the initial filtering.")
+    return(NULL)
+  }
+  res <- data.frame(res_mat, stringsAsFactors = FALSE)
 
-  colnames(res) <- c(cor_colname, p_colname, "pct1", "pct2", "lr")
-  res[[cor_colname]] <- as.numeric(res[[cor_colname]])
-  res[[p_colname]] <- as.numeric(res[[p_colname]])
-  res$pct1 <- as.numeric(res$pct1)
-  res$pct2 <- as.numeric(res$pct2)
+  colnames(res) <- c(cor_colname, p_colname, "pct1", "pct2", "lr", "slope", "intercept", "valid_sample", "filtered_sample")
+  num_cols <- c(cor_colname, p_colname, "pct1", "pct2", "slope", "intercept", "valid_sample", "filtered_sample")
+  res[num_cols] <- lapply(res[num_cols], as.numeric)
 
   res$adjust.p <- round(p.adjust(res[[p_colname]], method = adjust_method), 15)
 
@@ -203,8 +208,8 @@ filter_lr_single <- function(rna, sender, receiver, lr_database = PopComm::lr_db
   res <- res[which(res$adjust.p < min_adjust_p &
                      res[[cor_colname]] > min_cor &
                      res$pct1 > min_pct &
-                     res$pct2 > min_pct),]
-  res <- res[order(res$adjust.p, -res[[cor_colname]]),]
+                     res$pct2 > min_pct), ]
+  res <- res[order(res$adjust.p, -res[[cor_colname]]), ]
   if (nrow(res) > 0) {
     row.names(res) <- 1:nrow(res)
   }
@@ -218,7 +223,9 @@ filter_lr_single <- function(rna, sender, receiver, lr_database = PopComm::lr_db
   res$sender <- sender
   res$receiver <- receiver
 
-  # Final message and print a summary of results
+  res$ligand <- stringr::str_match(res$lr, "^(.*)_")[,2]
+  res$receptor <- stringr::str_match(res$lr, "_(.*)$")[,2]
+
   message("Filter and correlation process complete.")
   message("Head of results (", nrow(res), "):")
   print(head(res))
@@ -300,102 +307,72 @@ filter_lr_all <- function(rna, lr_database = PopComm::lr_db,
   if (length(cell_types) < 1) stop("No cell types found.")
 
   message("Analyzing ligand-receptor interactions between all cell types...")
-  message("\nCell types: ", paste(cell_types, collapse = ", "))
+  message("Cell types: ", paste(cell_types, collapse = ", "))
 
-  all_results <- list()
+  run_filter <- function(rna_obj, sender, receiver) {
+    res <- filter_lr_single(
+      rna = rna_obj,
+      sender = sender,
+      receiver = receiver,
+      lr_database = lr_database,
+      sample_col = "sample",
+      cell_type_col = "cell.type",
+      min_cells = min_cells,
+      min_samples = min_samples,
+      cor_method = cor_method,
+      adjust_method = adjust_method,
+      min_adjust_p = min_adjust_p,
+      min_cor = min_cor,
+      min_pct = min_pct,
+      mc_cores = mc_cores
+    )
+    if (!is.null(res) && nrow(res) > 0) {
+      return(res)
+    }
+    return(NULL)
+  }
 
   # Step 1: Filter for ligand-receptor interactions where the same cell type is both sender and receiver
   message("\nProcessing same cell type pairs...")
-  same_ct_res <- lapply(cell_types, function(ct) {
-    message("\n\n  Analyzing pair: ", ct, " <-> ", ct)
-    res <- filter_lr_single(
-      rna = rna,
-      sender = ct,
-      receiver = ct,
-      lr_database = lr_database,
-      sample_col = "sample",
-      cell_type_col = "cell.type",
-      min_cells = min_cells,
-      min_samples = min_samples,
-      cor_method = cor_method,
-      adjust_method = adjust_method,
-      min_adjust_p = min_adjust_p,
-      min_cor = min_cor,
-      min_pct = min_pct,
-      mc_cores = mc_cores
-    )
-
-    if (!is.null(res) && nrow(res) > 0) {
-      return(res)
-    } else {
-      return(NULL)
-    }
+  same_ct_results <- lapply(cell_types, function(ct) {
+    message("\n  Analyzing pair: ", ct, " <-> ", ct)
+    run_filter(rna, sender = ct, receiver = ct)
   })
-  same_ct_res <- Filter(Negate(is.null), same_ct_res)
+  same_ct_results <- Filter(Negate(is.null), same_ct_results)
 
   # Step 2: Filter for ligand-receptor interactions where sender and receiver are different cell types
   message("\n\n\nProcessing different cell type pairs...")
+  diff_ct_results <- list()
   unique_pairs <- combn(cell_types, 2, simplify = FALSE)
 
-  diff_ct_res <- lapply(unique_pairs, function(pair) {
+  for (pair in unique_pairs) {
     ct1 <- pair[1]
     ct2 <- pair[2]
-    message("\n\n  Analyzing pair: ", ct1, " <-> ", ct2)
+    message("\n  Analyzing pair: ", ct1, " <-> ", ct2)
 
     # subset data
     message("Subsetting data for selected cell types: ", ct1, " and ", ct2)
-    cells.to.keep <- rna$cell.type %in% c(ct1, ct2)
-    rna_subset <- rna[, cells.to.keep]
-    if (length(unique(rna_subset$cell.type)) < 2) return(NULL)
+    cells_to_keep <- rna$cell.type %in% c(ct1, ct2)
+    rna_subset <- rna[, cells_to_keep]
+    if (length(unique(rna_subset$cell.type)) < 2) {
+      message("  Skipping pair ", ct1, " and ", ct2, " due to insufficient cell types.")
+      next
+    }
 
     # ct1 -> ct2
-    res1 <- filter_lr_single(
-      rna = rna_subset,
-      sender = ct1,
-      receiver = ct2,
-      lr_database = lr_database,
-      sample_col = "sample",
-      cell_type_col = "cell.type",
-      min_cells = min_cells,
-      min_samples = min_samples,
-      cor_method = cor_method,
-      adjust_method = adjust_method,
-      min_adjust_p = min_adjust_p,
-      min_cor = min_cor,
-      min_pct = min_pct,
-      mc_cores = mc_cores
-    )
-
+    res_forward <- run_filter(rna_subset, sender = ct1, receiver = ct2)
     # ct2 -> ct1
-    res2 <- filter_lr_single(
-      rna = rna_subset,
-      sender = ct2,
-      receiver = ct1,
-      lr_database = lr_database,
-      sample_col = "sample",
-      cell_type_col = "cell.type",
-      min_cells = min_cells,
-      min_samples = min_samples,
-      cor_method = cor_method,
-      adjust_method = adjust_method,
-      min_adjust_p = min_adjust_p,
-      min_cor = min_cor,
-      min_pct = min_pct,
-      mc_cores = mc_cores
-    )
+    res_reverse <- run_filter(rna_subset, sender = ct2, receiver = ct1)
 
-    filtered_list <- list(res1, res2) %>%
-      Filter(f = function(x) !is.null(x) && nrow(x) > 0)
-
-    if (length(filtered_list) > 0) {
-      return(filtered_list)
-    } else {
-      return(NULL)
+    if (!is.null(res_forward)) {
+      diff_ct_results <- c(diff_ct_results, list(res_forward))
     }
-  })
-  diff_ct_res <- unlist(diff_ct_res, recursive = FALSE)
+    if (!is.null(res_reverse)) {
+      diff_ct_results <- c(diff_ct_results, list(res_reverse))
+    }
+  }
 
-  final_res <- dplyr::bind_rows(c(same_ct_res, diff_ct_res))
+  final_res <- dplyr::bind_rows(c(same_ct_results, diff_ct_results))
 
   # Check if the filtered result is empty
   if (nrow(final_res) == 0) {

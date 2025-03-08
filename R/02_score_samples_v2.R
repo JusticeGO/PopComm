@@ -36,7 +36,7 @@
 #' data(lr_db)
 #'
 #' # Analyzing ligand-receptor interactions: Cardiac -> Perivascular
-#' result01s <- filter_lr_single(
+#' result01s <- filter_lr_single_v2(
 #'   rna = seurat_object,
 #'   sender = "Cardiac",
 #'   receiver = "Perivascular",
@@ -50,7 +50,7 @@
 #' )
 #'
 #' # Analyzing ligand-receptor projection scores: Cardiac -> Perivascular
-#' result02s <- score_lr_single(
+#' result02s <- score_lr_single_v2(
 #'   rna = seurat_object,
 #'   sender = "Cardiac",
 #'   receiver = "Perivascular",
@@ -61,10 +61,10 @@
 #'   min_samples = 10,
 #'   mc_cores = 1
 #' )
-score_lr_single <- function(rna, sender, receiver, lr_custom,
-                            sample_col, cell_type_col,
-                            min_cells = 50, min_samples = 10,
-                            mc_cores = 10) {
+score_lr_single_v2 <- function(rna, sender, receiver, lr_custom,
+                               sample_col, cell_type_col,
+                               min_cells = 50, min_samples = 10,
+                               mc_cores = 10) {
 
   # Check parameters
   max_cores <- parallel::detectCores()
@@ -154,16 +154,18 @@ score_lr_single <- function(rna, sender, receiver, lr_custom,
       if (sd(x) == 0 || sd(y) == 0) {
         return(data.frame())
       }
-
-      model <- tryCatch(
-        lm(y ~ x),
-        error = function(e) NULL
-      )
-
-      if (is.null(model)) return(data.frame())
-
-      slope <- round(coef(model)[2], 5)
-      intercept <- round(coef(model)[1], 5)
+#
+#       model <- tryCatch(
+#         lm(y ~ x),
+#         error = function(e) NULL
+#       )
+#
+#       if (is.null(model)) return(data.frame())
+#
+#       slope <- round(coef(model)[2], 5)
+#       intercept <- round(coef(model)[1], 5)
+      slope <- lr$slope[i]
+      intercept <- lr$intercept[i]
 
       projections <- t(sapply(
         1:length(x),
@@ -199,15 +201,17 @@ score_lr_single <- function(rna, sender, receiver, lr_custom,
         return(data.frame())
       }
 
-      model <- tryCatch(
-        lm(y ~ x),
-        error = function(e) NULL
-      )
-
-      if (is.null(model)) return(data.frame())
-
-      slope <- round(coef(model)[2], 5)
-      intercept <- round(coef(model)[1], 5)
+      # model <- tryCatch(
+      #   lm(y ~ x),
+      #   error = function(e) NULL
+      # )
+      #
+      # if (is.null(model)) return(data.frame())
+      #
+      # slope <- round(coef(model)[2], 5)
+      # intercept <- round(coef(model)[1], 5)
+      slope <- lr$slope[i]
+      intercept <- lr$intercept[i]
 
       projections <- t(sapply(
         1:length(x),
@@ -283,7 +287,7 @@ score_lr_single <- function(rna, sender, receiver, lr_custom,
 #' data(lr_db)
 #'
 #' #' # Analyzing ligand-receptor interactions between all cell types
-#' result01a <- filter_lr_all(
+#' result01a <- filter_lr_all_v2(
 #'   rna = seurat_object,
 #'   lr_database = lr_db,
 #'   sample_col = "sample",
@@ -295,7 +299,7 @@ score_lr_single <- function(rna, sender, receiver, lr_custom,
 #' )
 #'
 #' # Analyzing ligand-receptor projection scores between all cell types
-#' result02a <- score_lr_all(
+#' result02a <- score_lr_all_v2(
 #'   rna = seurat_object,
 #'   lr_custom = result01a,
 #'   sample_col = "sample",
@@ -304,10 +308,10 @@ score_lr_single <- function(rna, sender, receiver, lr_custom,
 #'   min_samples = 10,
 #'   mc_cores = 1
 #' )
-score_lr_all <- function(rna, lr_custom,
-                         sample_col, cell_type_col,
-                         min_cells = 50, min_samples = 10,
-                         mc_cores = 10) {
+score_lr_all_v2 <- function(rna, lr_custom,
+                            sample_col, cell_type_col,
+                            min_cells = 50, min_samples = 10,
+                            mc_cores = 10) {
 
   # Check parameters
   max_cores <- parallel::detectCores()
@@ -343,7 +347,7 @@ score_lr_all <- function(rna, lr_custom,
   res_list <- lapply(split_data, function(lr_s) {
     sender <- lr_s$sender[1]
     receiver <- lr_s$receiver[1]
-    res <- score_lr_single(
+    res <- score_lr_single_v2(
       rna = rna,
       sender = sender,
       receiver = receiver,
