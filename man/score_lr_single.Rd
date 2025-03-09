@@ -65,7 +65,7 @@ result01s <- filter_lr_single(
   cell_type_col = "cell.type",
   min_cells = 20,
   min_samples = 10,
-  min_adjust_p = 0.05,
+  min_adjust_p = 0.5,
   mc_cores = 1
 )
 

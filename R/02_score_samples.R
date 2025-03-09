@@ -45,7 +45,7 @@
 #'   cell_type_col = "cell.type",
 #'   min_cells = 20,
 #'   min_samples = 10,
-#'   min_adjust_p = 0.05,
+#'   min_adjust_p = 0.5,
 #'   mc_cores = 1
 #' )
 #'
@@ -87,7 +87,7 @@ score_lr_single <- function(rna, sender, receiver, lr_custom,
   }
 
   # Step 1: Add sample and cell type columns to the RNA data object and subset
-  message("\nAnalyzing ligand-receptor projection scores: ", sender, " -> ", receiver)
+  message("Analyzing ligand-receptor projection scores: ", sender, " -> ", receiver)
 
   # Determine the subset of data
   if (!setequal(selected_types, cell_types)) {
@@ -98,18 +98,18 @@ score_lr_single <- function(rna, sender, receiver, lr_custom,
     rna.data <- rna
   }
 
-  # Step 2: Filter samples based on thresholds for the number of cells and samples
+  # Step 2: Filter samples based on cell counts per sample
   message("Filtering samples with cell counts...")
   cell_counts <- table(rna.data$sample, rna.data$cell.type)
   if (sender != receiver) {
     valid_samples <- names(which(
       cell_counts[, sender] > min_cells &
         cell_counts[, receiver] > min_cells
-    ))
+      ))
   } else {
     valid_samples <- names(which(
       cell_counts[, sender] > min_cells
-    ))
+      ))
   }
   message("Remaining samples after filtering: ", length(valid_samples))
   if (length(valid_samples) < min_samples) {
@@ -120,8 +120,6 @@ score_lr_single <- function(rna, sender, receiver, lr_custom,
 
   # Step 3: Load the ligand-receptor pairs after filtering for interactions
   lr <- lr_custom
-  lr$ligand <- stringr::str_match(lr$lr, "^(.*)_")[,2]
-  lr$receptor <- stringr::str_match(lr$lr, "_(.*)$")[,2]
 
   # Step 4: Compute average expression for each sample-cell type group
   rna.data$group <- paste0(rna.data$sample, "-lr-", rna.data$cell.type)
@@ -143,101 +141,43 @@ score_lr_single <- function(rna, sender, receiver, lr_custom,
   # Step 5: Calculating projection scores
   message("Calculating projection scores...")
 
-  # Check the operating system and use appropriate parallel function
-  if (Sys.info()["sysname"] == "Windows") {
-    # Use parLapply on Windows
-    cl <- parallel::makeCluster(mc_cores)
-    score.df <- parallel::parLapply(cl, 1:nrow(avg.s), function(i) {
-      x <- as.numeric(avg.s[lr$ligand[i], ])
-      y <- as.numeric(avg.r[lr$receptor[i], ])
+  calc_projection <- function(i) {
+    x <- as.numeric(avg.s[lr$ligand[i], ])
+    y <- as.numeric(avg.r[lr$receptor[i], ])
 
-      if (sd(x) == 0 || sd(y) == 0) {
-        return(data.frame())
-      }
+    if (sd(x) == 0 || sd(y) == 0) {
+      return(data.frame())
+    }
 
-      model <- tryCatch(
-        lm(y ~ x),
-        error = function(e) NULL
-      )
+    slope <- lr$slope[i]
+    intercept <- lr$intercept[i]
 
-      if (is.null(model)) return(data.frame())
+    projections <- t(sapply(
+      1:length(x), function(j) {
+        project_to_line(x[j], y[j], slope, intercept)
+      }))
 
-      slope <- round(coef(model)[2], 5)
-      intercept <- round(coef(model)[1], 5)
+    dx <- projections[, 1] - min(projections[, 1])
+    dy <- projections[, 2] - min(projections[, 2])
+    score <- round(sqrt(dx^2 + dy^2), 5)
+    normalized_score <- round(score / max(score), 5)
 
-      projections <- t(sapply(
-        1:length(x),
-        function(j) project_to_line(x[j], y[j], slope, intercept)
-      ))
+    lr_metadata <- lr[i, ]
+    result <- data.frame(
+      lr_metadata,
+      sample = colnames(avg.s),
+      score = score,
+      normalized_score = normalized_score,
+      row.names = NULL
+    )
 
-      dx <- projections[, 1] - min(projections[, 1])
-      dy <- projections[, 2] - min(projections[, 2])
-      score <- round(sqrt(dx^2 + dy^2), 5)
-      normalized.score <- score / max(score)
-
-      lr_metadata <- lr[i, ]
-      result <- data.frame(
-        lr_metadata,
-        sample = colnames(avg.s),
-        score = score,
-        normalized_score = round(normalized.score, 5),
-        row.names = NULL
-      )
-
-      result <- result[order(-result$score), ]
-
-      return(result)
-    })
-    parallel::stopCluster(cl)
-  } else {
-    # Use pbmclapply for Linux systems
-    score.df <- pbmcapply::pbmclapply(1:nrow(avg.s), function(i) {
-      x <- as.numeric(avg.s[lr$ligand[i], ])
-      y <- as.numeric(avg.r[lr$receptor[i], ])
-
-      if (sd(x) == 0 || sd(y) == 0) {
-        return(data.frame())
-      }
-
-      model <- tryCatch(
-        lm(y ~ x),
-        error = function(e) NULL
-      )
-
-      if (is.null(model)) return(data.frame())
-
-      slope <- round(coef(model)[2], 5)
-      intercept <- round(coef(model)[1], 5)
-
-      projections <- t(sapply(
-        1:length(x),
-        function(j) project_to_line(x[j], y[j], slope, intercept)
-      ))
-
-      dx <- projections[, 1] - min(projections[, 1])
-      dy <- projections[, 2] - min(projections[, 2])
-      score <- round(sqrt(dx^2 + dy^2), 5)
-      normalized.score <- score / max(score)
-
-      lr_metadata <- lr[i, ]
-      result <- data.frame(
-        lr_metadata,
-        sample = colnames(avg.s),
-        score = score,
-        normalized_score = round(normalized.score, 5),
-        row.names = NULL
-      )
-
-      result <- result[order(-result$score), ]
-
-      return(result)
-    }, mc.cores = mc_cores)
+    result <- result[order(-result$score), ]
+    return(result)
   }
 
+  score_list <- run_parallel(1:nrow(avg.s), calc_projection, mc_cores = mc_cores)
   # Combine the results into a single data frame and remove NAs
-  score.df <- score.df %>%
-    dplyr::bind_rows() %>%
-    na.omit()
+  score.df <- dplyr::bind_rows(score_list) %>% na.omit()
 
   message("Analyzing ligand-receptor projection scores process complete.")
   message("Head of results (", nrow(score.df), "):")
@@ -324,7 +264,7 @@ score_lr_all <- function(rna, lr_custom,
   if (length(cell_types) < 1) stop("No cell types found.")
 
   message("Analyzing ligand-receptor projection scores between all cell types...")
-  message("\nCell types: ", paste(cell_types, collapse = ", "))
+  message("Cell types: ", paste(cell_types, collapse = ", "), "\n")
 
   all_results <- list()
 

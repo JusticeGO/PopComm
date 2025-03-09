@@ -154,22 +154,7 @@ one_step_single <- function(rna, sender, receiver, lr_database = PopComm::lr_db,
     x <- as.numeric(avg.s[lr$ligand_gene_symbol[i], ])
     y <- as.numeric(avg.r[lr$receptor_gene_symbol[i], ])
 
-    if (sd(x) == 0 || sd(y) == 0) {
-      return(NULL)
-    }
-
-    # Fitting Linear Models
-    model <- tryCatch(
-      lm(y ~ x),
-      error = function(e) NULL
-    )
-
-    if (is.null(model)) return(NULL)
-
-    slope <- round(coef(model)[2], 5)
-    intercept <- round(coef(model)[1], 5)
-
-    # filter ligand-receptor
+    # filter sample
     data_df <- data.frame(x = x, y = y)
     data_df <- remove_outlier(data_df)
     p <- data_df$x
@@ -179,6 +164,22 @@ one_step_single <- function(rna, sender, receiver, lr_database = PopComm::lr_db,
       return(NULL)
     }
 
+    if (sd(p) == 0 || sd(q) == 0) {
+      return(NULL)
+    }
+
+    # Fitting Linear Models
+    model <- tryCatch(
+      lm(q ~ p),
+      error = function(e) NULL
+    )
+
+    if (is.null(model)) return(NULL)
+
+    slope <- round(coef(model)[2], 5)
+    intercept <- round(coef(model)[1], 5)
+
+    # cor.test
     pct1 <- round(sum(p > 0) / length(p), 3)
     pct2 <- round(sum(q > 0) / length(q), 3)
 
@@ -192,9 +193,7 @@ one_step_single <- function(rna, sender, receiver, lr_database = PopComm::lr_db,
       round(res_cor$p.value, 15),
       pct1, pct2,
       lr_name,
-      slope, intercept,
-      length(valid_samples),
-      length(p)
+      slope, intercept
     ))
   }
 
@@ -206,8 +205,8 @@ one_step_single <- function(rna, sender, receiver, lr_database = PopComm::lr_db,
   }
   res <- data.frame(res_mat, stringsAsFactors = FALSE)
 
-  colnames(res) <- c(cor_colname, p_colname, "pct1", "pct2", "lr", "slope", "intercept", "valid_sample", "filtered_sample")
-  num_cols <- c(cor_colname, p_colname, "pct1", "pct2", "slope", "intercept", "valid_sample", "filtered_sample")
+  colnames(res) <- c(cor_colname, p_colname, "pct1", "pct2", "lr", "slope", "intercept")
+  num_cols <- c(cor_colname, p_colname, "pct1", "pct2", "slope", "intercept")
   res[num_cols] <- lapply(res[num_cols], as.numeric)
 
   res$adjust.p <- round(p.adjust(res[[p_colname]], method = adjust_method), 15)
@@ -231,6 +230,9 @@ one_step_single <- function(rna, sender, receiver, lr_database = PopComm::lr_db,
   res$sender <- sender
   res$receiver <- receiver
 
+  res$ligand <- stringr::str_match(res$lr, "^(.*)_")[,2]
+  res$receptor <- stringr::str_match(res$lr, "_(.*)$")[,2]
+
   message("Filter and correlation process complete.")
   message("Head of results (", nrow(res), "):")
   print(head(res))
@@ -239,10 +241,6 @@ one_step_single <- function(rna, sender, receiver, lr_database = PopComm::lr_db,
   # Step 2: 02_score_sample
   message("\nStep 2: Calculate the Projection Score")
   message("Analyzing ligand-receptor projection scores: ", sender, " -> ", receiver)
-
-  # Load the ligand-receptor pairs after filtering for interactions
-  res$ligand <- stringr::str_match(res$lr, "^(.*)_")[,2]
-  res$receptor <- stringr::str_match(res$lr, "_(.*)$")[,2]
 
   # Compute average expression for each sample-cell type group
   avg.s_sub <- avg.s[res$ligand, , drop = FALSE]
@@ -290,7 +288,7 @@ one_step_single <- function(rna, sender, receiver, lr_database = PopComm::lr_db,
   message("Head of projection score results (", nrow(score.df), "):")
   print(head(score.df))
 
-  message("\n", sender, " -> ", receiver, " analyzing process complete.")
+  message("\n", sender, " -> ", receiver, " analyzing process complete.\n")
 
   return(list(res1 = res, res2 = score.df))
 }
