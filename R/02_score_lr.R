@@ -9,25 +9,25 @@
 #' @param rna A Seurat object containing single-cell RNA expression data.
 #' @param sender Cell type designated as the ligand sender (character).
 #' @param receiver Cell type designated as the receptor receiver (character).
-#' @param lr_custom A data frame of ligand-receptor pairs from prior analysis (e.g., output of `filter_lr_single`).
+#' @param filtered_lr A data frame of ligand-receptor pairs from prior analysis (e.g., output of `filter_lr_single`).
 #'                  Must contain an "lr" column with pair identifiers in "Ligand_Receptor" format.
 #' @param sample_col Column name in Seurat metadata indicating sample identifiers (character).
 #' @param cell_type_col Column name in Seurat metadata indicating cell type classifications (character).
 #' @param min_cells Minimum cells required per sample for both sender and receiver (default 50).
 #' @param min_samples Minimum valid samples required to proceed (default 10).
-#' @param mc_cores Number of CPU cores for parallel processing (default 10). Automatically capped at (system cores - 1).
+#' @param num_cores Number of CPU cores for parallel processing (default 10). Automatically capped at (system cores - 1).
 #'
 #' @return A data frame with projection scores per sample and LR pair. Columns:
-#'   \item{All input from \code{lr_custom}}{Original columns provided by the user in \code{lr_custom}.}
+#'   \item{All input from \code{filtered_lr}}{Original columns provided by the user in \code{filtered_lr}.}
 #'   \item{\code{sample}}{Sample identifier.}
 #'   \item{\code{score}}{Projection score (raw co-expression intensity).}
 #'   \item{\code{normalized_score}}{Normalized score scaled between 0-1.}
-#'   Rows ordered by \code{lr_custom} columns and descending \code{score}.
+#'   Rows ordered by \code{filtered_lr} columns and descending \code{score}.
 #'   Returns \code{NULL} if no valid pairs.
 #'
 #' @export
 #'
-#' @importFrom magrittr %>%
+#' @importFrom dplyr %>% bind_rows
 #' @importFrom stats lm sd coef na.omit
 #' @importFrom utils head
 #'
@@ -46,7 +46,7 @@
 #'   min_cells = 20,
 #'   min_samples = 10,
 #'   min_adjust_p = 0.5,
-#'   mc_cores = 1
+#'   num_cores = 1
 #' )
 #'
 #' # Analyzing ligand-receptor projection scores: Cardiac -> Perivascular
@@ -54,24 +54,24 @@
 #'   rna = seurat_object,
 #'   sender = "Cardiac",
 #'   receiver = "Perivascular",
-#'   lr_custom = result01s,
+#'   filtered_lr = result01s,
 #'   sample_col = "sample",
 #'   cell_type_col = "cell.type",
 #'   min_cells = 20,
 #'   min_samples = 10,
-#'   mc_cores = 1
+#'   num_cores = 1
 #' )
-score_lr_single <- function(rna, sender, receiver, lr_custom,
+score_lr_single <- function(rna, sender, receiver, filtered_lr,
                             sample_col, cell_type_col,
                             min_cells = 50, min_samples = 10,
-                            mc_cores = 10) {
+                            num_cores = 10) {
 
   # Check parameters
   max_cores <- parallel::detectCores()
-  if (mc_cores > max_cores) {
-    message("Warning: Using more cores (", mc_cores, ") than available (", max_cores, ").")
-    message("Using ", max_cores - 1, " cores instead of requested ", mc_cores)
-    mc_cores <- max_cores - 1
+  if (num_cores > max_cores) {
+    message("Warning: Using more cores (", num_cores, ") than available (", max_cores, ").")
+    message("Using ", max_cores - 1, " cores instead of requested ", num_cores)
+    num_cores <- max_cores - 1
   }
 
   # Pre-process metadata
@@ -119,7 +119,7 @@ score_lr_single <- function(rna, sender, receiver, lr_custom,
   rna.data <- subset(rna.data, sample %in% valid_samples)
 
   # Step 3: Load the ligand-receptor pairs after filtering for interactions
-  lr <- lr_custom
+  lr <- filtered_lr
 
   # Step 4: Compute average expression for each sample-cell type group
   rna.data$group <- paste0(rna.data$sample, "-lr-", rna.data$cell.type)
@@ -175,9 +175,9 @@ score_lr_single <- function(rna, sender, receiver, lr_custom,
     return(result)
   }
 
-  score_list <- run_parallel(1:nrow(avg.s), calc_projection, mc_cores = mc_cores)
+  score_list <- run_parallel(1:nrow(avg.s), calc_projection, num_cores = num_cores)
   # Combine the results into a single data frame and remove NAs
-  score.df <- dplyr::bind_rows(score_list) %>% na.omit()
+  score.df <- bind_rows(score_list) %>% na.omit()
 
   message("Analyzing ligand-receptor projection scores process complete.")
   message("Head of results (", nrow(score.df), "):")
@@ -197,25 +197,25 @@ score_lr_single <- function(rna, sender, receiver, lr_custom,
 #' measuring the normalized distance of each sample's LR expression from the origin of the regression line.
 #'
 #' @param rna A Seurat object containing single-cell RNA expression data.
-#' @param lr_custom A data frame of ligand-receptor pairs from prior analysis (e.g., output of `filter_lr_single`).
+#' @param filtered_lr A data frame of ligand-receptor pairs from prior analysis (e.g., output of `filter_lr_single`).
 #'                  Must contain an "lr" column with pair identifiers in "Ligand_Receptor" format.
 #' @param sample_col Column name in Seurat metadata indicating sample identifiers (character).
 #' @param cell_type_col Column name in Seurat metadata indicating cell type classifications (character).
 #' @param min_cells Minimum cells required per sample for both sender and receiver (default 50).
 #' @param min_samples Minimum valid samples required to proceed (default 10).
-#' @param mc_cores Number of CPU cores for parallel processing (default 10). Automatically capped at (system cores - 1).
+#' @param num_cores Number of CPU cores for parallel processing (default 10). Automatically capped at (system cores - 1).
 #'
 #' @return A data frame containing projection scores for each sample and ligand-receptor (LR) pair, with the following columns:
-#'   \item{All columns from the input `lr_custom`}{}
+#'   \item{All columns from the input `filtered_lr`}{}
 #'   \item{sample}{Sample identifier.}
 #'   \item{score}{Projection score indicating the co-expression intensity of the LR pair in the sample.}
 #'   \item{normalized_score}{Normalized projection score (range 0-1) indicating the relative co-expression intensity.}
-#'   Rows are first ordered by `lr_custom` and then by the `score` column in descending order.
+#'   Rows are first ordered by `filtered_lr` and then by the `score` column in descending order.
 #'   Returns NULL if no valid pairs are found.
 #'
 #' @export
 #'
-#' @importFrom magrittr %>%
+#' @importFrom dplyr %>% bind_rows
 #' @importFrom utils head
 #'
 #' @examples
@@ -231,30 +231,30 @@ score_lr_single <- function(rna, sender, receiver, lr_custom,
 #'   min_cells = 20,
 #'   min_samples = 10,
 #'   min_adjust_p = 0.5,
-#'   mc_cores = 1
+#'   num_cores = 1
 #' )
 #'
 #' # Analyzing ligand-receptor projection scores between all cell types
 #' result02a <- score_lr_all(
 #'   rna = seurat_object,
-#'   lr_custom = result01a,
+#'   filtered_lr = result01a,
 #'   sample_col = "sample",
 #'   cell_type_col = "cell.type",
 #'   min_cells = 20,
 #'   min_samples = 10,
-#'   mc_cores = 1
+#'   num_cores = 1
 #' )
-score_lr_all <- function(rna, lr_custom,
+score_lr_all <- function(rna, filtered_lr,
                          sample_col, cell_type_col,
                          min_cells = 50, min_samples = 10,
-                         mc_cores = 10) {
+                         num_cores = 10) {
 
   # Check parameters
   max_cores <- parallel::detectCores()
-  if (mc_cores > max_cores) {
-    message("Warning: Using more cores (", mc_cores, ") than available (", max_cores, ").")
-    message("Using ", max_cores - 1, " cores instead of requested ", mc_cores)
-    mc_cores <- max_cores - 1
+  if (num_cores > max_cores) {
+    message("Warning: Using more cores (", num_cores, ") than available (", max_cores, ").")
+    message("Using ", max_cores - 1, " cores instead of requested ", num_cores)
+    num_cores <- max_cores - 1
   }
 
   # Pre-process metadata
@@ -268,14 +268,14 @@ score_lr_all <- function(rna, lr_custom,
 
   all_results <- list()
 
-  # split lr_custom data
+  # split filtered_lr data
   split_data <- list()
-  for (i in 1:nrow(lr_custom)) {
-    sender <- lr_custom$sender[i]
-    receiver <- lr_custom$receiver[i]
+  for (i in 1:nrow(filtered_lr)) {
+    sender <- filtered_lr$sender[i]
+    receiver <- filtered_lr$receiver[i]
     combination_name <- paste(sender, receiver, sep = "_")
     if (!combination_name %in% names(split_data)) {
-      split_data[[combination_name]] <- lr_custom[lr_custom$sender == sender & lr_custom$receiver == receiver, ]
+      split_data[[combination_name]] <- filtered_lr[filtered_lr$sender == sender & filtered_lr$receiver == receiver, ]
     }
   }
 
@@ -287,12 +287,12 @@ score_lr_all <- function(rna, lr_custom,
       rna = rna,
       sender = sender,
       receiver = receiver,
-      lr_custom = lr_s,
+      filtered_lr = lr_s,
       sample_col = "sample",
       cell_type_col = "cell.type",
       min_cells = min_cells,
       min_samples = min_samples,
-      mc_cores = mc_cores
+      num_cores = num_cores
     )
 
     if (!is.null(res) && nrow(res) > 0) {
@@ -302,7 +302,7 @@ score_lr_all <- function(rna, lr_custom,
     }
   })
   res_list <- Filter(Negate(is.null), res_list)
-  final_res <- dplyr::bind_rows(res_list)
+  final_res <- bind_rows(res_list)
 
   message("\n\nAll cell types analyzing ligand-receptor projection scores process complete.")
   message("Head of results (", nrow(final_res), "):")

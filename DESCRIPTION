@@ -2,7 +2,7 @@ Package: PopComm
 Title: Population-Level Cell Communication Analysis
 Version: 0.0.1.0
 Authors@R: 
-    person("Zheng", "Gong", , "gongzheng131@hotmail.com", role = c("aut", "cre"),
+    person("Zheng", "Gong", "gongzheng131@hotmail.com", role = c("aut", "cre"),
            comment = c(ORCID = "0000-0001-7285-2630"))
 Description: Facilitates population-level analysis of ligand-receptor interactions 
     using large-scale single-cell transcriptomic data. Identifies significant LR pairs 
@@ -21,9 +21,13 @@ Imports:
     Seurat (>= 4.1.0),
     parallel,
     pbmcapply (>= 1.5.0),
-    stringr,
+    stringr (>= 1.4.0),
     dplyr (>= 1.0.0),
-    magrittr (>= 2.0.0),
+    scales (>= 1.1.1),
+    igraph (>= 1.2.6),
+    ggraph (>= 2.0.5),
+    ggplot2 (>= 3.3.0),
+    grid
 License: MIT + file LICENSE
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)

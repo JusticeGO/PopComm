@@ -20,7 +20,7 @@
 #' @param min_adjust_p Adjusted p-value threshold for significance (default 0.05).
 #' @param min_cor Minimum correlation coefficient threshold (default 0). Must be ≥ 0.
 #' @param min_pct Minimum percentage of non-zero expression in both ligand and receptor (default 0.1).
-#' @param mc_cores Number of CPU cores for parallel processing (default 10). Automatically capped at (system cores - 1).
+#' @param num_cores Number of CPU cores for parallel processing (default 10). Automatically capped at (system cores - 1).
 #'
 #' @return A data frame with columns:
 #'   \item{\code{cor_<method>}}{Correlation coefficient (e.g., \code{cor_spearman}).}
@@ -36,7 +36,7 @@
 #'
 #' @export
 #'
-#' @importFrom magrittr %>%
+#' @importFrom dplyr %>% bind_rows
 #' @importFrom stats cor.test p.adjust lm sd coef na.omit
 #' @importFrom utils head
 #'
@@ -55,7 +55,7 @@
 #'   min_cells = 20,
 #'   min_samples = 10,
 #'   min_adjust_p = 0.5,
-#'   mc_cores = 1
+#'   num_cores = 1
 #' )
 #'
 #' head(res_single$res1)
@@ -65,16 +65,16 @@ one_step_single <- function(rna, sender, receiver, lr_database = PopComm::lr_db,
                             min_cells = 50, min_samples = 10,
                             cor_method = "spearman", adjust_method = "BH",
                             min_adjust_p = 0.05, min_cor = 0, min_pct = 0.1,
-                            mc_cores = 10) {
+                            num_cores = 10) {
 
   message("One-step analysis of receptor-ligand interaction: ", sender, " -> ", receiver)
 
   # Check parameters
   max_cores <- parallel::detectCores()
-  if (mc_cores > max_cores) {
-    message("Warning: Using more cores (", mc_cores, ") than available (", max_cores, ").")
-    message("Using ", max_cores - 1, " cores instead of requested ", mc_cores)
-    mc_cores <- max_cores - 1
+  if (num_cores > max_cores) {
+    message("Warning: Using more cores (", num_cores, ") than available (", max_cores, ").")
+    message("Using ", max_cores - 1, " cores instead of requested ", num_cores)
+    num_cores <- max_cores - 1
   }
 
   # Pre-process metadata
@@ -146,8 +146,8 @@ one_step_single <- function(rna, sender, receiver, lr_database = PopComm::lr_db,
 
   message("Starting correlation and filtering process for ligand-receptor pairs...")
 
-  cor_colname <- paste0("cor_", cor_method)
-  p_colname <- paste0("p_", cor_method)
+  # cor_colname <- paste0("cor_", cor_method)
+  # p_colname <- paste0("p_", cor_method)
 
   # Calculate correlation and linear models
   calc_correlation <- function(i) {
@@ -197,7 +197,7 @@ one_step_single <- function(rna, sender, receiver, lr_database = PopComm::lr_db,
     ))
   }
 
-  res_list <- run_parallel(1:nrow(avg.r), calc_correlation, mc_cores = mc_cores)
+  res_list <- run_parallel(1:nrow(avg.r), calc_correlation, num_cores = num_cores)
   res_mat <- do.call(rbind, res_list)
   if (is.null(res_mat)) {
     message("No valid ligand-receptor pairs passed the initial filtering.")
@@ -205,19 +205,19 @@ one_step_single <- function(rna, sender, receiver, lr_database = PopComm::lr_db,
   }
   res <- data.frame(res_mat, stringsAsFactors = FALSE)
 
-  colnames(res) <- c(cor_colname, p_colname, "pct1", "pct2", "lr", "slope", "intercept")
-  num_cols <- c(cor_colname, p_colname, "pct1", "pct2", "slope", "intercept")
+  colnames(res) <- c("cor", "p_val", "pct1", "pct2", "lr", "slope", "intercept")
+  num_cols <- c("cor", "p_val", "pct1", "pct2", "slope", "intercept")
   res[num_cols] <- lapply(res[num_cols], as.numeric)
 
-  res$adjust.p <- round(p.adjust(res[[p_colname]], method = adjust_method), 15)
+  res$adjust.p <- round(p.adjust(res$p_val, method = adjust_method), 15)
 
   # Filter the results based on adjusted p-value, correlation, and percentage thresholds
   message("Filtering results based on adjusted p-value, correlation, and percentage thresholds...")
   res <- res[which(res$adjust.p < min_adjust_p &
-                     res[[cor_colname]] > min_cor &
+                     res$cor > min_cor &
                      res$pct1 > min_pct &
                      res$pct2 > min_pct), ]
-  res <- res[order(res$adjust.p, -res[[cor_colname]]), ]
+  res <- res[order(res$adjust.p, -res$cor), ]
   if (nrow(res) > 0) {
     row.names(res) <- 1:nrow(res)
   }
@@ -281,8 +281,8 @@ one_step_single <- function(rna, sender, receiver, lr_database = PopComm::lr_db,
     return(result)
   }
 
-  score_list <- run_parallel(1:nrow(avg.s_sub), calc_projection, mc_cores = mc_cores)
-  score.df <- dplyr::bind_rows(score_list) %>% na.omit()
+  score_list <- run_parallel(1:nrow(avg.s_sub), calc_projection, num_cores = num_cores)
+  score.df <- bind_rows(score_list) %>% na.omit()
 
   message("Analyzing ligand-receptor projection scores process complete.")
   message("Head of projection score results (", nrow(score.df), "):")
@@ -316,7 +316,7 @@ one_step_single <- function(rna, sender, receiver, lr_database = PopComm::lr_db,
 #' @param min_adjust_p Adjusted p-value threshold for significance (default 0.05).
 #' @param min_cor Minimum correlation coefficient threshold (default 0). Must be ≥ 0.
 #' @param min_pct Minimum percentage of non-zero expression in both ligand and receptor (default 0.1).
-#' @param mc_cores Number of CPU cores for parallel processing (default 10). Automatically capped at (system cores - 1).
+#' @param num_cores Number of CPU cores for parallel processing (default 10). Automatically capped at (system cores - 1).
 #'
 #' @return A data frame with columns:
 #'   \item{\code{cor_<method>}}{Correlation coefficient (e.g., \code{cor_spearman}).}
@@ -332,7 +332,7 @@ one_step_single <- function(rna, sender, receiver, lr_database = PopComm::lr_db,
 #'
 #' @export
 #'
-#' @importFrom magrittr %>%
+#' @importFrom dplyr %>% bind_rows
 #' @importFrom stats cor.test p.adjust lm sd coef na.omit
 #' @importFrom utils head
 #'
@@ -349,7 +349,7 @@ one_step_single <- function(rna, sender, receiver, lr_database = PopComm::lr_db,
 #'   min_cells = 20,
 #'   min_samples = 10,
 #'   min_adjust_p = 0.5,
-#'   mc_cores = 1
+#'   num_cores = 1
 #' )
 #'
 #' head(res_all$res1)
@@ -359,16 +359,16 @@ one_step_all <- function(rna, lr_database,
                          min_cells = 50, min_samples = 10,
                          cor_method = "spearman", adjust_method = "BH",
                          min_adjust_p = 0.05, min_cor = 0, min_pct = 0.1,
-                         mc_cores = 10) {
+                         num_cores = 10) {
 
   message("\nOne-step analysis of receptor-ligand interaction: For all possible cell type pairs")
 
   # Check parameters
   max_cores <- parallel::detectCores()
-  if (mc_cores > max_cores) {
-    message("Warning: Using more cores (", mc_cores, ") than available (", max_cores, ").")
-    message("Using ", max_cores - 1, " cores instead of requested ", mc_cores)
-    mc_cores <- max_cores - 1
+  if (num_cores > max_cores) {
+    message("Warning: Using more cores (", num_cores, ") than available (", max_cores, ").")
+    message("Using ", max_cores - 1, " cores instead of requested ", num_cores)
+    num_cores <- max_cores - 1
   }
 
   # Pre-process metadata
@@ -393,7 +393,7 @@ one_step_all <- function(rna, lr_database,
       min_adjust_p = min_adjust_p,
       min_cor = min_cor,
       min_pct = min_pct,
-      mc_cores = mc_cores
+      num_cores = num_cores
     )
     if (!is.null(res) && is.list(res) && !is.null(res$res1) && nrow(res$res1) > 0) {
       return(res)
@@ -446,11 +446,11 @@ one_step_all <- function(rna, lr_database,
     do.call(rbind, lapply(results_list, function(x) x[[element]]))
   }
 
-  all_results_res1 <- dplyr::bind_rows(
+  all_results_res1 <- bind_rows(
     combine_results(same_ct_results, "res1"),
     combine_results(diff_ct_results, "res1")
   )
-  all_results_res2 <- dplyr::bind_rows(
+  all_results_res2 <- bind_rows(
     combine_results(same_ct_results, "res2"),
     combine_results(diff_ct_results, "res2")
   )

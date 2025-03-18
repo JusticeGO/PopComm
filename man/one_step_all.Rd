@@ -16,7 +16,7 @@ one_step_all(
   min_adjust_p = 0.05,
   min_cor = 0,
   min_pct = 0.1,
-  mc_cores = 10
+  num_cores = 10
 )
 }
 \arguments{
@@ -43,7 +43,7 @@ Options: "holm", "hochberg", "hommel", "bonferroni", "BH", "BY", "fdr", "none".}
 
 \item{min_pct}{Minimum percentage of non-zero expression in both ligand and receptor (default 0.1).}
 
-\item{mc_cores}{Number of CPU cores for parallel processing (default 10). Automatically capped at (system cores - 1).}
+\item{num_cores}{Number of CPU cores for parallel processing (default 10). Automatically capped at (system cores - 1).}
 }
 \value{
 A data frame with columns:
@@ -79,7 +79,7 @@ res_all <- one_step_all(
   min_cells = 20,
   min_samples = 10,
   min_adjust_p = 0.5,
-  mc_cores = 1
+  num_cores = 1
 )
 
 head(res_all$res1)
