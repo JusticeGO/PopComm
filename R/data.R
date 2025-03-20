@@ -65,3 +65,8 @@ load_example_seurat <- function() {
     }
   )
 }
+
+
+#' Example for filtered_lr
+#'
+"filtered_lr_eg"

@@ -34,9 +34,9 @@ one_step_single(
 
 \item{cell_type_col}{Column name in metadata indicating cell type classifications (character).}
 
-\item{min_cells}{Minimum cells required per sample for both cell types (default 50).}
+\item{min_cells}{Minimum cells required per sample for both sender and receiver (default 50).}
 
-\item{min_samples}{Minimum valid samples required (default 10).}
+\item{min_samples}{Minimum valid samples required of LR filter (default 10).}
 
 \item{cor_method}{Correlation method: "spearman" (default), "pearson", or "kendall".}
 

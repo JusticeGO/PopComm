@@ -12,8 +12,8 @@
 #' @param lr_database Data frame of LR pairs with columns "ligand_gene_symbol" and "receptor_gene_symbol".
 #' @param sample_col Column name in metadata indicating sample identifiers (character).
 #' @param cell_type_col Column name in metadata indicating cell type classifications (character).
-#' @param min_cells Minimum cells required per sample for both cell types (default 50).
-#' @param min_samples Minimum valid samples required (default 10).
+#' @param min_cells Minimum cells required per sample for both sender and receiver (default 50).
+#' @param min_samples Minimum valid samples required of LR filter (default 10).
 #' @param cor_method Correlation method: "spearman" (default), "pearson", or "kendall".
 #' @param adjust_method P-value adjustment method (default "BH" for Benjamini-Hochberg).
 #'        Options: "holm", "hochberg", "hommel", "bonferroni", "BH", "BY", "fdr", "none".
@@ -308,8 +308,8 @@ one_step_single <- function(rna, sender, receiver, lr_database = PopComm::lr_db,
 #' @param lr_database Data frame of LR pairs with columns "ligand_gene_symbol" and "receptor_gene_symbol".
 #' @param sample_col Column name in metadata indicating sample identifiers (character).
 #' @param cell_type_col Column name in metadata indicating cell type classifications (character).
-#' @param min_cells Minimum cells required per sample for both cell types (default 50).
-#' @param min_samples Minimum valid samples required (default 10).
+#' @param min_cells Minimum cells required per sample for both sender and receiver (default 50).
+#' @param min_samples Minimum valid samples required for LR filter (default 10).
 #' @param cor_method Correlation method: "spearman" (default), "pearson", or "kendall".
 #' @param adjust_method P-value adjustment method (default "BH" for Benjamini-Hochberg).
 #'        Options: "holm", "hochberg", "hommel", "bonferroni", "BH", "BY", "fdr", "none".

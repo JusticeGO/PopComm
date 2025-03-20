@@ -6,3 +6,12 @@ usethis::use_data(lr_db, overwrite = TRUE)
 # Example
 # seurat_object <- readRDS("data-raw/example_seurat_obj.rds")
 # usethis::use_data(seurat_object)
+
+
+# Example filter_lr_eg
+filtered_lr_eg <- readRDS("data-raw/filtered_lr_eg.rds")
+usethis::use_data(filtered_lr_eg, overwrite = TRUE)
+
+# Example lr_scores_eg
+lr_scores_eg <- readRDS("data-raw/lr_scores_eg.rds")
+usethis::use_data(lr_scores_eg, overwrite = TRUE)

@@ -14,7 +14,6 @@
 #' @param sample_col Column name in Seurat metadata indicating sample identifiers (character).
 #' @param cell_type_col Column name in Seurat metadata indicating cell type classifications (character).
 #' @param min_cells Minimum cells required per sample for both sender and receiver (default 50).
-#' @param min_samples Minimum valid samples required to proceed (default 10).
 #' @param num_cores Number of CPU cores for parallel processing (default 10). Automatically capped at (system cores - 1).
 #'
 #' @return A data frame with projection scores per sample and LR pair. Columns:
@@ -58,13 +57,11 @@
 #'   sample_col = "sample",
 #'   cell_type_col = "cell.type",
 #'   min_cells = 20,
-#'   min_samples = 10,
 #'   num_cores = 1
 #' )
 score_lr_single <- function(rna, sender, receiver, filtered_lr,
                             sample_col, cell_type_col,
-                            min_cells = 50, min_samples = 10,
-                            num_cores = 10) {
+                            min_cells = 50, num_cores = 10) {
 
   # Check parameters
   max_cores <- parallel::detectCores()
@@ -112,8 +109,8 @@ score_lr_single <- function(rna, sender, receiver, filtered_lr,
       ))
   }
   message("Remaining samples after filtering: ", length(valid_samples))
-  if (length(valid_samples) < min_samples) {
-    message("Insufficient valid samples (", length(valid_samples), " < ", min_samples, "). Analysis stopped.")
+  if (length(valid_samples) < 1) {
+    message("Insufficient valid samples. Analysis stopped.")
     return(NULL)
   }
   rna.data <- subset(rna.data, sample %in% valid_samples)
@@ -202,7 +199,6 @@ score_lr_single <- function(rna, sender, receiver, filtered_lr,
 #' @param sample_col Column name in Seurat metadata indicating sample identifiers (character).
 #' @param cell_type_col Column name in Seurat metadata indicating cell type classifications (character).
 #' @param min_cells Minimum cells required per sample for both sender and receiver (default 50).
-#' @param min_samples Minimum valid samples required to proceed (default 10).
 #' @param num_cores Number of CPU cores for parallel processing (default 10). Automatically capped at (system cores - 1).
 #'
 #' @return A data frame containing projection scores for each sample and ligand-receptor (LR) pair, with the following columns:
@@ -241,13 +237,11 @@ score_lr_single <- function(rna, sender, receiver, filtered_lr,
 #'   sample_col = "sample",
 #'   cell_type_col = "cell.type",
 #'   min_cells = 20,
-#'   min_samples = 10,
 #'   num_cores = 1
 #' )
 score_lr_all <- function(rna, filtered_lr,
                          sample_col, cell_type_col,
-                         min_cells = 50, min_samples = 10,
-                         num_cores = 10) {
+                         min_cells = 50, num_cores = 10) {
 
   # Check parameters
   max_cores <- parallel::detectCores()
@@ -291,7 +285,6 @@ score_lr_all <- function(rna, filtered_lr,
       sample_col = "sample",
       cell_type_col = "cell.type",
       min_cells = min_cells,
-      min_samples = min_samples,
       num_cores = num_cores
     )
 

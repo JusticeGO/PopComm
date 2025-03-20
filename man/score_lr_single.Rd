@@ -12,7 +12,6 @@ score_lr_single(
   sample_col,
   cell_type_col,
   min_cells = 50,
-  min_samples = 10,
   num_cores = 10
 )
 }
@@ -31,8 +30,6 @@ Must contain an "lr" column with pair identifiers in "Ligand_Receptor" format.}
 \item{cell_type_col}{Column name in Seurat metadata indicating cell type classifications (character).}
 
 \item{min_cells}{Minimum cells required per sample for both sender and receiver (default 50).}
-
-\item{min_samples}{Minimum valid samples required to proceed (default 10).}
 
 \item{num_cores}{Number of CPU cores for parallel processing (default 10). Automatically capped at (system cores - 1).}
 }
@@ -78,7 +75,6 @@ result02s <- score_lr_single(
   sample_col = "sample",
   cell_type_col = "cell.type",
   min_cells = 20,
-  min_samples = 10,
   num_cores = 1
 )
 }
