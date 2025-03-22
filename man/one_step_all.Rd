@@ -28,22 +28,22 @@ one_step_all(
 
 \item{cell_type_col}{Column name in metadata indicating cell type classifications (character).}
 
-\item{min_cells}{Minimum cells required per sample for both sender and receiver (default 50).}
+\item{min_cells}{Minimum cells required per sample for both sender and receiver (numeric, default 50).}
 
-\item{min_samples}{Minimum valid samples required for LR filter (default 10).}
+\item{min_samples}{Minimum valid samples required for LR filter (numeric, default 10).}
 
 \item{cor_method}{Correlation method: "spearman" (default), "pearson", or "kendall".}
 
 \item{adjust_method}{P-value adjustment method (default "BH" for Benjamini-Hochberg).
 Options: "holm", "hochberg", "hommel", "bonferroni", "BH", "BY", "fdr", "none".}
 
-\item{min_adjust_p}{Adjusted p-value threshold for significance (default 0.05).}
+\item{min_adjust_p}{Adjusted p-value threshold for significance (numeric, default 0.05).}
 
-\item{min_cor}{Minimum correlation coefficient threshold (default 0). Must be ≥ 0.}
+\item{min_cor}{Minimum correlation coefficient threshold (numeric, default 0). Must be ≥ 0.}
 
-\item{min_pct}{Minimum percentage of non-zero expression in both ligand and receptor (default 0.1).}
+\item{min_pct}{Minimum percentage of non-zero expression in both ligand and receptor (numeric, default 0.1).}
 
-\item{num_cores}{Number of CPU cores for parallel processing (default 10). Automatically capped at (system cores - 1).}
+\item{num_cores}{Number of CPU cores for parallel processing (numeric, default 10). Automatically capped at (system cores - 1).}
 }
 \value{
 A data frame with columns:

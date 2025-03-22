@@ -23,9 +23,9 @@ Must contain an "lr" column with pair identifiers in "Ligand_Receptor" format.}
 
 \item{cell_type_col}{Column name in Seurat metadata indicating cell type classifications (character).}
 
-\item{min_cells}{Minimum cells required per sample for both sender and receiver (default 50).}
+\item{min_cells}{Minimum cells required per sample for both sender and receiver (numeric, default 50).}
 
-\item{num_cores}{Number of CPU cores for parallel processing (default 10). Automatically capped at (system cores - 1).}
+\item{num_cores}{Number of CPU cores for parallel processing (numeric, default 10). Automatically capped at (system cores - 1).}
 }
 \value{
 A data frame containing projection scores for each sample and ligand-receptor (LR) pair, with the following columns:
