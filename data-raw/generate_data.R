@@ -15,3 +15,7 @@ usethis::use_data(filtered_lr_eg, overwrite = TRUE)
 # Example lr_scores_eg
 lr_scores_eg <- readRDS("data-raw/lr_scores_eg.rds")
 usethis::use_data(lr_scores_eg, overwrite = TRUE)
+
+# Example metadata_eg
+metadata_eg <- read.csv("data-raw/metadata_eg.tsv", sep = "\t")
+usethis::use_data(metadata_eg, overwrite = TRUE)

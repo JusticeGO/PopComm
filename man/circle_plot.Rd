@@ -2,7 +2,7 @@
 % Please edit documentation in R/04_vis_lr.R
 \name{circle_plot}
 \alias{circle_plot}
-\title{Plot Circular Cell-Cell Interaction Network}
+\title{Plot Circular LR Interaction Network}
 \usage{
 circle_plot(
   filtered_lr,
@@ -25,7 +25,7 @@ containing at least the columns "sender", "receiver", and "cor".}
 A ggplot object representing the network plot.
 }
 \description{
-Plots a circular cell-cell interaction network with curved directed edges.
+Plots a circular ligand-receptor (LR) interaction network with curved directed edges.
 Nodes are arranged in a circle, and edge widths and colors represent interaction strengths.
 }
 \examples{

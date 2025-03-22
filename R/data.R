@@ -68,5 +68,11 @@ load_example_seurat <- function() {
 
 
 #' Example for filtered_lr
-#'
 "filtered_lr_eg"
+
+#' Example for lr_scores
+"lr_scores_eg"
+
+#' Example for metadata
+"metadata_eg"
+
