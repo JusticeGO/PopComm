@@ -2,7 +2,7 @@
 % Please edit documentation in R/04_vis_lr.R
 \name{dot_plot}
 \alias{dot_plot}
-\title{Create Cell-Cell Interaction Dot Plot}
+\title{Create LR Interaction Dot Plot}
 \usage{
 dot_plot(
   filtered_lr,
@@ -13,10 +13,9 @@ dot_plot(
 )
 }
 \arguments{
-\item{filtered_lr}{A data frame containing ligand-receptor interaction data
-with columns "ligand", "receptor", "sender", "receiver", "cor", and "adjust.p".}
+\item{filtered_lr}{A data frame containing ligand-receptor interaction data.}
 
-\item{top_n}{Integer specifying the number of top interactions to select per sender-receiver pair (default: 5).}
+\item{top_n}{Integer specifying the number of top interactions to select per sender-receiver pair (numeric, default: 5).}
 
 \item{axis}{Character indicating the configuration of rows and columns in the plot.
 Options: "LR-SR" (default, rows = ligand-receptor pairs, columns = sender-receiver pairs) or "SR-LR".}
@@ -31,12 +30,12 @@ If NULL, the top_n interactions per sender-receiver pair are used.}
 A ggplot object representing the dot plot.
 }
 \description{
-Generates a dot plot to visualize Cell-Cell interactions. Dot sizes are scaled by the correlation
+Generates a dot plot to visualize ligand-receptor (LR) interaction. Dot sizes are scaled by the correlation
 coefficient and dot colors represent -log10(adjust.p). The function supports plotting the top interactions
 per sender-receiver pair or user-specified ligand-receptor pairs.
 }
 \examples{
-# Plot Cell-Cell Interaction Dot Plot
+# Plot LR Interaction Dot Plot
 data(filtered_lr_eg)
 p <- dot_plot(filtered_lr_eg, axis = "LR-SR", type_scale = "size")
 print(p)
