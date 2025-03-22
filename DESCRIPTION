@@ -28,7 +28,13 @@ Imports:
     ggraph (>= 2.0.5),
     ggplot2 (>= 3.3.0),
     RColorBrewer,
-    grid
+    grid,
+    rlang,
+    grDevices,
+    pheatmap (>= 1.0.12),
+    tibble (>= 3.0.0),
+    tidyr (>= 1.0.0),
+    tidyselect (>= 1.1.0)
 License: MIT + file LICENSE
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)

@@ -1,7 +1,7 @@
 #' Plot Circular LR Interaction Network
 #'
 #' @description
-#' Plots a circular cell-cell interaction network with curved directed edges.
+#' Plots a circular ligand-receptor (LR) interaction network with curved directed edges.
 #' Nodes are arranged in a circle, and edge widths and colors represent interaction strengths.
 #'
 #' @param filtered_lr A data frame of ligand-receptor pairs from prior analysis (e.g., output of `filter_lr_all`),
@@ -135,13 +135,12 @@ circle_plot <- function(filtered_lr,
 #' Create LR Interaction Dot Plot
 #'
 #' @description
-#' Generates a dot plot to visualize cell-cell interactions. Dot sizes are scaled by the correlation
+#' Generates a dot plot to visualize ligand-receptor (LR) interaction. Dot sizes are scaled by the correlation
 #' coefficient and dot colors represent -log10(adjust.p). The function supports plotting the top interactions
 #' per sender-receiver pair or user-specified ligand-receptor pairs.
 #'
-#' @param filtered_lr A data frame containing ligand-receptor interaction data
-#'        with columns "ligand", "receptor", "sender", "receiver", "cor", and "adjust.p".
-#' @param top_n Integer specifying the number of top interactions to select per sender-receiver pair (default: 5).
+#' @param filtered_lr A data frame containing ligand-receptor interaction data.
+#' @param top_n Integer specifying the number of top interactions to select per sender-receiver pair (numeric, default: 5).
 #' @param axis Character indicating the configuration of rows and columns in the plot.
 #'        Options: "LR-SR" (default, rows = ligand-receptor pairs, columns = sender-receiver pairs) or "SR-LR".
 #' @param type_scale Character indicating the scaling method for the plot.
@@ -155,9 +154,10 @@ circle_plot <- function(filtered_lr,
 #'
 #' @importFrom dplyr %>% mutate filter group_by arrange desc slice_head ungroup
 #' @importFrom ggplot2 ggplot aes geom_point scale_color_gradientn theme_minimal theme element_text element_line element_blank labs scale_size scale_radius coord_fixed
+#' @importFrom rlang .data
 #'
 #' @examples
-#' # Plot Cell-Cell Interaction Dot Plot
+#' # Plot LR Interaction Dot Plot
 #' data(filtered_lr_eg)
 #' p <- dot_plot(filtered_lr_eg, axis = "LR-SR", type_scale = "size")
 #' print(p)
@@ -185,8 +185,8 @@ dot_plot <- function(filtered_lr,
 
   # Construct ligand-receptor (LR) and sender-receiver (SR) identifiers
   filtered_lr <- filtered_lr %>%
-    mutate(LR_pair = paste(ligand, receptor, sep = "_"),
-           SR_pair = paste(sender, receiver, sep = "_"))
+    mutate(LR_pair = paste(.data[["ligand"]], .data[["receptor"]], sep = "_"),
+           SR_pair = paste(.data[["sender"]], .data[["receiver"]], sep = "_"))
 
   # adjust.p capped at 1e-20
   # Calculate -log10(adjust.p) for color mapping
@@ -195,11 +195,11 @@ dot_plot <- function(filtered_lr,
 
   # Filter data: if selected_LR is provided, keep only those rows; otherwise, choose top_n per SR_pair
   if (!is.null(selected_LR)) {
-    filtered_lr <- filtered_lr %>% filter(LR_pair %in% selected_LR)
+    filtered_lr <- filtered_lr %>% filter(.data[["LR_pair"]] %in% selected_LR)
   } else {
     filtered_lr <- filtered_lr %>%
-      group_by(SR_pair) %>%
-      arrange(desc(cor)) %>%
+      group_by(.data[["SR_pair"]]) %>%
+      arrange(desc(.data[["cor"]])) %>%
       slice_head(n = top_n) %>%
       ungroup()
   }
@@ -227,7 +227,7 @@ dot_plot <- function(filtered_lr,
   filtered_lr[[col_label]] <- factor(filtered_lr[[col_label]], levels = unique(filtered_lr[[col_label]]))
 
   # Create the dot plot using ggplot2
-  p <- ggplot(filtered_lr, aes(x = .data[[col_label]], y = .data[[row_label]], size = cor, color = p.scaled)) +
+  p <- ggplot(filtered_lr, aes(x = .data[[col_label]], y = .data[[row_label]], size = .data[["cor"]], color = .data[["p.scaled"]])) +
     geom_point() +
     scale_color_gradientn(
       colors = c("#c8ebf6", "#5fa9d1", "#154778"),

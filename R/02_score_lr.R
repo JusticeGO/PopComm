@@ -13,8 +13,8 @@
 #'                  Must contain an "lr" column with pair identifiers in "Ligand_Receptor" format.
 #' @param sample_col Column name in Seurat metadata indicating sample identifiers (character).
 #' @param cell_type_col Column name in Seurat metadata indicating cell type classifications (character).
-#' @param min_cells Minimum cells required per sample for both sender and receiver (default 50).
-#' @param num_cores Number of CPU cores for parallel processing (default 10). Automatically capped at (system cores - 1).
+#' @param min_cells Minimum cells required per sample for both sender and receiver (numeric, default 50).
+#' @param num_cores Number of CPU cores for parallel processing (numeric, default 10). Automatically capped at (system cores - 1).
 #'
 #' @return A data frame with projection scores per sample and LR pair. Columns:
 #'   \item{All input from \code{filtered_lr}}{Original columns provided by the user in \code{filtered_lr}.}
@@ -198,8 +198,8 @@ score_lr_single <- function(rna, sender, receiver, filtered_lr,
 #'                  Must contain an "lr" column with pair identifiers in "Ligand_Receptor" format.
 #' @param sample_col Column name in Seurat metadata indicating sample identifiers (character).
 #' @param cell_type_col Column name in Seurat metadata indicating cell type classifications (character).
-#' @param min_cells Minimum cells required per sample for both sender and receiver (default 50).
-#' @param num_cores Number of CPU cores for parallel processing (default 10). Automatically capped at (system cores - 1).
+#' @param min_cells Minimum cells required per sample for both sender and receiver (numeric, default 50).
+#' @param num_cores Number of CPU cores for parallel processing (numeric, default 10). Automatically capped at (system cores - 1).
 #'
 #' @return A data frame containing projection scores for each sample and ligand-receptor (LR) pair, with the following columns:
 #'   \item{All columns from the input `filtered_lr`}{}

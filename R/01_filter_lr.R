@@ -10,15 +10,15 @@
 #' @param lr_database A data frame of ligand-receptor pairs with columns "ligand_gene_symbol" and "receptor_gene_symbol".
 #' @param sample_col Column name in Seurat metadata indicating sample identifiers (character).
 #' @param cell_type_col Column name in Seurat metadata indicating cell type classifications (character).
-#' @param min_cells Minimum cells required per sample for both sender and receiver (default 50).
-#' @param min_samples Minimum valid samples required to proceed (default 10).
+#' @param min_cells Minimum cells required per sample for both sender and receiver (numeric, default 50).
+#' @param min_samples Minimum valid samples required to proceed (numeric, default 10).
 #' @param cor_method Correlation method: "spearman" (default), "pearson", or "kendall".
 #' @param adjust_method P-value adjustment method (default "BH" for Benjamini-Hochberg).
 #'        Options: "holm", "hochberg", "hommel", "bonferroni", "BH", "BY", "fdr", "none".
-#' @param min_adjust_p Adjusted p-value threshold for significance (default 0.05).
-#' @param min_cor Minimum correlation coefficient threshold (default 0). Must be ≥ 0.
-#' @param min_pct Minimum percentage of non-zero expression in both ligand and receptor (default 0.1).
-#' @param num_cores Number of CPU cores for parallel processing (default 10). Automatically capped at (system cores - 1).
+#' @param min_adjust_p Adjusted p-value threshold for significance (numeric, default 0.05).
+#' @param min_cor Minimum correlation coefficient threshold (numeric, default 0). Must be ≥ 0.
+#' @param min_pct Minimum percentage of non-zero expression in both ligand and receptor (numeric, default 0.1).
+#' @param num_cores Number of CPU cores for parallel processing (numeric, default 10). Automatically capped at (system cores - 1).
 #'
 #' @return A data frame of filtered LR pairs with columns:
 #'   \item{\code{cor_<method>}}{Correlation coefficient (e.g., \code{cor_spearman}).}
@@ -243,15 +243,15 @@ filter_lr_single <- function(rna, sender, receiver, lr_database = PopComm::lr_db
 #' @param lr_database A data frame of ligand-receptor pairs with columns "ligand_gene_symbol" and "receptor_gene_symbol".
 #' @param sample_col Column name in Seurat metadata indicating sample identifiers (character).
 #' @param cell_type_col Column name in Seurat metadata indicating cell type classifications (character).
-#' @param min_cells Minimum cells required per sample for both sender and receiver (default 50).
-#' @param min_samples Minimum valid samples required to proceed (default 10).
+#' @param min_cells Minimum cells required per sample for both sender and receiver (numeric, default 50).
+#' @param min_samples Minimum valid samples required to proceed (numeric, default 10).
 #' @param cor_method Correlation method: "spearman" (default), "pearson", or "kendall".
 #' @param adjust_method P-value adjustment method (default "BH" for Benjamini-Hochberg).
 #'        Options: "holm", "hochberg", "hommel", "bonferroni", "BH", "BY", "fdr", "none".
-#' @param min_adjust_p Adjusted p-value threshold for significance (default 0.05).
-#' @param min_cor Minimum correlation coefficient threshold (default 0). Must be ≥ 0.
-#' @param min_pct Minimum percentage of non-zero expression in both ligand and receptor (default 0.1).
-#' @param num_cores Number of CPU cores for parallel processing (default 10). Automatically capped at (system cores - 1).
+#' @param min_adjust_p Adjusted p-value threshold for significance (numeric, default 0.05).
+#' @param min_cor Minimum correlation coefficient threshold (numeric, default 0). Must be ≥ 0.
+#' @param min_pct Minimum percentage of non-zero expression in both ligand and receptor (numeric, default 0.1).
+#' @param num_cores Number of CPU cores for parallel processing (numeric, default 10). Automatically capped at (system cores - 1).
 #'
 #' @return A data frame of filtered LR pairs with columns:
 #'   \item{\code{cor_<method>}}{Correlation coefficient (e.g., \code{cor_spearman}).}
