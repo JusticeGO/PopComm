@@ -18,9 +18,9 @@
 #'
 #' @return A data frame with projection scores per sample and LR pair. Columns:
 #'   \item{All input from \code{filtered_lr}}{Original columns provided by the user in \code{filtered_lr}.}
-#'   \item{\code{sample}}{Sample identifier.}
-#'   \item{\code{score}}{Projection score (raw co-expression intensity).}
-#'   \item{\code{normalized_score}}{Normalized score scaled between 0-1.}
+#'   \item{sample}{Sample identifier.}
+#'   \item{score}{Projection score (raw co-expression intensity).}
+#'   \item{normalized_score}{Normalized score scaled between 0-1.}
 #'   Rows ordered by \code{filtered_lr} columns and descending \code{score}.
 #'   Returns \code{NULL} if no valid pairs.
 #'
@@ -201,13 +201,13 @@ score_lr_single <- function(rna, sender, receiver, filtered_lr,
 #' @param min_cells Minimum cells required per sample for both sender and receiver (numeric, default 50).
 #' @param num_cores Number of CPU cores for parallel processing (numeric, default 10). Automatically capped at (system cores - 1).
 #'
-#' @return A data frame containing projection scores for each sample and ligand-receptor (LR) pair, with the following columns:
-#'   \item{All columns from the input `filtered_lr`}{}
+#' @return A data frame with projection scores per sample and LR pair. Columns:
+#'   \item{All input from \code{filtered_lr}}{Original columns provided by the user in \code{filtered_lr}.}
 #'   \item{sample}{Sample identifier.}
-#'   \item{score}{Projection score indicating the co-expression intensity of the LR pair in the sample.}
-#'   \item{normalized_score}{Normalized projection score (range 0-1) indicating the relative co-expression intensity.}
-#'   Rows are first ordered by `filtered_lr` and then by the `score` column in descending order.
-#'   Returns NULL if no valid pairs are found.
+#'   \item{score}{Projection score (raw co-expression intensity).}
+#'   \item{normalized_score}{Normalized score scaled between 0-1.}
+#'   Rows ordered by \code{filtered_lr} columns and descending \code{score}.
+#'   Returns \code{NULL} if no valid pairs.
 #'
 #' @export
 #'

@@ -1,4 +1,4 @@
-#' Plot Circular LR Interaction Network
+#' Plot Circular Ligand-Receptor Interaction Network
 #'
 #' @description
 #' Plots a circular ligand-receptor (LR) interaction network with curved directed edges.
@@ -132,7 +132,7 @@ circle_plot <- function(filtered_lr,
 
 
 
-#' Create LR Interaction Dot Plot
+#' Create Ligand-Receptor Interaction Dot Plot
 #'
 #' @description
 #' Generates a dot plot to visualize ligand-receptor (LR) interaction. Dot sizes are scaled by the correlation

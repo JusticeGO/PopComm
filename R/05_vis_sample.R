@@ -1,4 +1,4 @@
-#' Generate Heatmap of LR Interaction Scores
+#' Generate Heatmap of Ligand-Receptor Interaction Scores
 #'
 #' @description
 #' This function generates a heatmap to visualize the ligand-receptor (LR) interaction scores across samples.
@@ -29,7 +29,7 @@
 #' data(lr_scores_eg)
 #' data(metadata_eg)
 #' p <- heatmap_sample(lr_scores_eg, metadata_eg, score = "normalized", selected_sender = "Cardiac",
-#'   selected_receiver = "Perivascular", selected_metadata = c("Sex", "Age_group"))
+#'   selected_receiver = "Perivascular", selected_metadata = c("Sex", "Age_group", "IFN_type"))
 #' print(p)
 heatmap_sample <- function(lr_scores, metadata, score = "normalized",
                            selected_sender = NULL,
@@ -83,7 +83,7 @@ heatmap_sample <- function(lr_scores, metadata, score = "normalized",
     }
     metadata_sub <- metadata_sub[colnames(heatmap_matrix), , drop = FALSE]
   } else {
-    stop("No sample information corresponding to the heatmap column was found in metadata.")
+    stop("No sample information corresponding to the column was found in metadata.")
   }
 
   if (is.null(selected_metadata)) {
@@ -132,7 +132,7 @@ heatmap_sample <- function(lr_scores, metadata, score = "normalized",
 
 
 
-#' Generate PCA of LR Interaction Scores
+#' Generate PCA of Ligand-Receptor Interaction Scores
 #'
 #' @description
 #' This function performs principal component analysis (PCA) on ligand-receptor (LR) interaction scores across samples,
@@ -140,7 +140,6 @@ heatmap_sample <- function(lr_scores, metadata, score = "normalized",
 #'
 #' @param lr_scores Data frame containing LR interaction scores per sample (data frame).
 #' @param metadata Data frame containing sample metadata (data frame).
-#' @param score Character string indicating which score to use: "normalized" (default) or "raw" .
 #' @param selected_sender Specific sender cell type to filter, default is None (use all) (character).
 #' @param selected_receiver Specific receiver cell type to filter, default is None (use all) (character).
 #' @param color_by \code{metadata} column name to color points in PCA plot (character).
@@ -160,17 +159,24 @@ heatmap_sample <- function(lr_scores, metadata, score = "normalized",
 #' # PCA of LR Interaction Scores
 #' data(lr_scores_eg)
 #' data(metadata_eg)
-#' res <- pca_sample(lr_scores_eg, metadata_eg, score = "normalized",
-#'   selected_sender = "Cardiac", selected_receiver = "Perivascular", color_by = "Age_group")
+#' res <- pca_sample(lr_scores_eg, metadata_eg, selected_sender = "Cardiac",
+#'   selected_receiver = "Perivascular", color_by = "IFN_type")
 #' print(res$pca_plot)
-pca_sample <- function(lr_scores, metadata, score = "normalized",
-                       selected_sender = NULL, selected_receiver = NULL,
-                       color_by = NULL, n_components = 2) {
+pca_sample <- function(lr_scores,
+                       metadata,
+                       selected_sender = NULL,
+                       selected_receiver = NULL,
+                       color_by = NULL,
+                       n_components = 2) {
 
   # Parameter validation
-  if (!score %in% c("normalized", "raw"))
-    stop("score must be either 'normalized' or 'raw'")
-  score_col <- ifelse(score == "normalized", "normalized_score", "score")
+  if ("normalized_score" %in% colnames(lr_scores)) {
+    score_col <- "normalized_score"
+  } else if ("score" %in% colnames(lr_scores)) {
+    score_col <- "score"
+  } else {
+    stop("lr_scores must contain either a 'score' or a 'normalized_score' column.")
+  }
 
   # Filter by sender and receiver cell types if specified
   if (!is.null(selected_sender)) {
@@ -261,3 +267,4 @@ pca_sample <- function(lr_scores, metadata, score = "normalized",
   # Return a list containing the plot and the PCA results data frame
   return(list(pca_plot = p, pca_result = pca_scores))
 }
+

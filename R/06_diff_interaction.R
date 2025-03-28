@@ -26,7 +26,7 @@ get_sample_metadata <- function(rna, sample_col) {
 
 
 
-#' Correlation Analysis between LR Interaction Scores and Continuous Metadata
+#' Correlation Analysis between Ligand-Receptor Interaction Scores and Continuous Metadata
 #'
 #' @description
 #' This function performs a Spearman correlation analysis between ligand-receptor (LR) interaction scores
@@ -41,9 +41,10 @@ get_sample_metadata <- function(rna, sample_col) {
 #'
 #' @export
 #'
-#' @importFrom dplyr %>% mutate group_by summarise left_join filter arrange pull select
+#' @importFrom dplyr %>% mutate group_by summarise left_join filter arrange select
 #' @importFrom tidyr pivot_wider
 #' @importFrom stats cor.test p.adjust
+#' @importFrom tibble column_to_rownames
 #' @importFrom tidyselect all_of
 #' @importFrom rlang .data
 #'
@@ -82,10 +83,28 @@ corr_lr_interaction <- function(lr_scores, metadata, correlate_with) {
 
   # Extract sample names (columns) and ensure continuous values are ordered accordingly
   sample_names <- colnames(heatmap_data)[-1]  # first column is LRSR
-  continuous_values <- metadata %>%
-    filter(sample %in% sample_names) %>%
-    arrange(match(sample, sample_names)) %>%
-    pull(.data[[correlate_with]])
+
+
+  if ("sample" %in% colnames(metadata)) {
+    metadata_sub <- metadata %>% filter(sample %in% sample_names)
+    missing_samples <- setdiff(sample_names, metadata_sub$sample)
+    if (length(missing_samples) > 0) {
+      warning("The following samples were not found in metadata: ", paste(missing_samples, collapse = ", "))
+    }
+    metadata_sub <- column_to_rownames(metadata_sub, var = "sample")
+    metadata_sub <- metadata_sub[sample_names, , drop = FALSE]
+  } else if (all(sample_names %in% rownames(metadata))) {
+    metadata_sub <- metadata[rownames(metadata) %in% sample_names, , drop = FALSE]
+    missing_samples <- setdiff(sample_names, rownames(metadata_sub))
+    if (length(missing_samples) > 0) {
+      warning("The following samples were not found in metadata: ", paste(missing_samples, collapse = ", "))
+    }
+    metadata_sub <- metadata_sub[sample_names, , drop = FALSE]
+  } else {
+    stop("No sample information corresponding to the columns was found in metadata.")
+  }
+
+  continuous_values <- metadata_sub[[correlate_with]]
 
   # Initialize vectors to store results
   correlations <- numeric(nrow(heatmap_data))
@@ -153,7 +172,7 @@ corr_lr_interaction <- function(lr_scores, metadata, correlate_with) {
 #'
 #' @export
 #'
-#' @importFrom dplyr %>% mutate group_by summarise left_join filter pull select
+#' @importFrom dplyr %>% mutate group_by summarise left_join filter select
 #' @importFrom tidyr pivot_wider
 #' @importFrom stats wilcox.test p.adjust
 #' @importFrom tidyselect all_of
@@ -177,11 +196,8 @@ diff_lr_interaction <- function(lr_scores, metadata, group_by, ident1, ident2) {
   metadata$sample <- as.character(metadata$sample)
   lr_scores$sample <- as.character(lr_scores$sample)
 
-  # Merge metadata with lr_scores for the grouping variable
-  metadata_sub <- metadata %>%
-    select(sample, all_of(group_by))
-  merged_data <- lr_scores %>%
-    left_join(metadata_sub, by = "sample")
+  metadata_sub_temp <- metadata %>% select(sample, all_of(group_by))
+  merged_data <- lr_scores %>% left_join(metadata_sub_temp, by = "sample")
 
   # Create a new identifier for LR-CellType pairs
   merged_data <- merged_data %>%
@@ -194,12 +210,28 @@ diff_lr_interaction <- function(lr_scores, metadata, group_by, ident1, ident2) {
     pivot_wider(names_from = sample, values_from = mean_score, values_fill = list(mean_score = 0))
 
   # Retrieve sample names for each group from metadata
-  samples_ident1 <- metadata %>%
-    filter(.data[[group_by]] == ident1) %>%
-    pull(sample)
-  samples_ident2 <- metadata %>%
-    filter(.data[[group_by]] == ident2) %>%
-    pull(sample)
+  sample_names <- colnames(heatmap_data)[-1]
+  if ("sample" %in% colnames(metadata)) {
+    metadata_sub <- metadata %>% filter(sample %in% sample_names)
+    missing_samples <- setdiff(sample_names, metadata_sub$sample)
+    if (length(missing_samples) > 0) {
+      warning("The following samples were not found in metadata: ", paste(missing_samples, collapse = ", "))
+    }
+    metadata_sub <- column_to_rownames(metadata_sub, var = "sample")
+    metadata_sub <- metadata_sub[sample_names, , drop = FALSE]
+  } else if (all(sample_names %in% rownames(metadata))) {
+    metadata_sub <- metadata[rownames(metadata) %in% sample_names, , drop = FALSE]
+    missing_samples <- setdiff(sample_names, rownames(metadata_sub))
+    if (length(missing_samples) > 0) {
+      warning("The following samples were not found in metadata: ", paste(missing_samples, collapse = ", "))
+    }
+    metadata_sub <- metadata_sub[sample_names, , drop = FALSE]
+  } else {
+    stop("No sample information corresponding to the heatmap columns was found in metadata.")
+  }
+
+  samples_ident1 <- rownames(metadata_sub)[metadata_sub[[group_by]] == ident1]
+  samples_ident2 <- rownames(metadata_sub)[metadata_sub[[group_by]] == ident2]
 
   # Calculate group-wise mean scores per LRSR pair
   group1_data <- rowMeans(as.data.frame(select(heatmap_data, all_of(samples_ident1))), na.rm = TRUE)

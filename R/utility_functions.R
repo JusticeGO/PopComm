@@ -23,12 +23,15 @@
 #'
 #' @keywords internal
 #' @noRd
-run_parallel <- function(iterations, FUN, num_cores = 1) {
+run_parallel <- function(iterations, FUN, num_cores = 1, export_vars = NULL) {
   # Check if the operating system is Windows
   if (Sys.info()["sysname"] == "Windows") {
     # For Windows, create a cluster and use parallel::parLapply
     cl <- parallel::makeCluster(num_cores)
     on.exit(parallel::stopCluster(cl))
+    if (!is.null(export_vars)) {
+      parallel::clusterExport(cl, varlist = export_vars, envir = parent.frame())
+    }
     result <- parallel::parLapply(cl, iterations, FUN)
   } else {
     # For other operating systems, use pbmcapply::pbmclapply for parallel processing
@@ -36,6 +39,7 @@ run_parallel <- function(iterations, FUN, num_cores = 1) {
   }
   return(result)
 }
+
 
 
 #' Remove Outliers from Data
