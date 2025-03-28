@@ -2,7 +2,7 @@
 % Please edit documentation in R/05_vis_sample.R
 \name{heatmap_sample}
 \alias{heatmap_sample}
-\title{Generate Heatmap of LR Interaction Scores}
+\title{Generate Heatmap of Ligand-Receptor Interaction Scores}
 \usage{
 heatmap_sample(
   lr_scores,
@@ -38,6 +38,6 @@ Rows represent LR pairs and columns represent samples. Optionally, sample metada
 data(lr_scores_eg)
 data(metadata_eg)
 p <- heatmap_sample(lr_scores_eg, metadata_eg, score = "normalized", selected_sender = "Cardiac",
-  selected_receiver = "Perivascular", selected_metadata = c("Sex", "Age_group"))
+  selected_receiver = "Perivascular", selected_metadata = c("Sex", "Age_group", "IFN_type"))
 print(p)
 }

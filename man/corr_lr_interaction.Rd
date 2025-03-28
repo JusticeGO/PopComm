@@ -2,7 +2,7 @@
 % Please edit documentation in R/06_diff_interaction.R
 \name{corr_lr_interaction}
 \alias{corr_lr_interaction}
-\title{Correlation Analysis between LR Interaction Scores and Continuous Metadata}
+\title{Correlation Analysis between Ligand-Receptor Interaction Scores and Continuous Metadata}
 \usage{
 corr_lr_interaction(lr_scores, metadata, correlate_with)
 }

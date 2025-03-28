@@ -2,7 +2,7 @@
 % Please edit documentation in R/04_vis_lr.R
 \name{circle_plot}
 \alias{circle_plot}
-\title{Plot Circular LR Interaction Network}
+\title{Plot Circular Ligand-Receptor Interaction Network}
 \usage{
 circle_plot(
   filtered_lr,

@@ -2,7 +2,7 @@
 % Please edit documentation in R/04_vis_lr.R
 \name{dot_plot}
 \alias{dot_plot}
-\title{Create LR Interaction Dot Plot}
+\title{Create Ligand-Receptor Interaction Dot Plot}
 \usage{
 dot_plot(
   filtered_lr,

@@ -17,7 +17,8 @@ filter_lr_single(
   adjust_method = "BH",
   min_adjust_p = 0.05,
   min_cor = 0,
-  min_pct = 0.1,
+  min_ratio = 0.1,
+  min_cell_ratio = 0.1,
   num_cores = 10
 )
 }
@@ -47,19 +48,22 @@ Options: "holm", "hochberg", "hommel", "bonferroni", "BH", "BY", "fdr", "none".}
 
 \item{min_cor}{Minimum correlation coefficient threshold (numeric, default 0). Must be ≥ 0.}
 
-\item{min_pct}{Minimum percentage of non-zero expression in both ligand and receptor (numeric, default 0.1).}
+\item{min_ratio}{Minimum ratio of samples in which both the ligand and receptor genes must be expressed (numeric, default 0.1).}
+
+\item{min_cell_ratio}{Minimum ratio of cells expressing ligand and receptor genes in sender or receiver cells (numeric, default 0.1).}
 
 \item{num_cores}{Number of CPU cores for parallel processing (numeric, default 10). Automatically capped at (system cores - 1).}
 }
 \value{
 A data frame of filtered LR pairs with columns:
-\item{\code{cor_<method>}}{Correlation coefficient (e.g., \code{cor_spearman}).}
-\item{\code{p_<method>}}{Raw p-value (e.g., \code{p_spearman}).}
-\item{pct1, pct2}{Percent non-zero expression in sender and receiver.}
-\item{lr}{Ligand-receptor pair identifier (\code{"Ligand_Receptor"}).}
+\item{ligand, receptor}{Ligand and receptor gene symbols.}
+\item{cor}{Correlation coefficient.}
+\item{p_val}{Raw p-value.}
 \item{adjust.p}{Adjusted p-value.}
-\item{sender, receiver}{Sending/receiving cell types.}
-Rows ordered by ascending \code{adjust.p} and descending \code{cor_<method>}.
+\item{sender, receiver}{Sender and receiver cell types.}
+\item{slope}{Slope of the linear regression model.}
+\item{intercept}{Intercept of the linear regression model.}
+Rows ordered by ascending \code{adjust.p} and descending \code{cor}.
 Returns \code{NULL} if no pairs pass filters.
 }
 \description{

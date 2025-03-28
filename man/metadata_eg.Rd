@@ -5,7 +5,7 @@
 \alias{metadata_eg}
 \title{Example for metadata}
 \format{
-An object of class \code{data.frame} with 163 rows and 8 columns.
+An object of class \code{data.frame} with 163 rows and 9 columns.
 }
 \usage{
 metadata_eg
