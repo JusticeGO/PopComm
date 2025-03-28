@@ -2,12 +2,11 @@
 % Please edit documentation in R/05_vis_sample.R
 \name{pca_sample}
 \alias{pca_sample}
-\title{Generate PCA of LR Interaction Scores}
+\title{Generate PCA of Ligand-Receptor Interaction Scores}
 \usage{
 pca_sample(
   lr_scores,
   metadata,
-  score = "normalized",
   selected_sender = NULL,
   selected_receiver = NULL,
   color_by = NULL,
@@ -18,8 +17,6 @@ pca_sample(
 \item{lr_scores}{Data frame containing LR interaction scores per sample (data frame).}
 
 \item{metadata}{Data frame containing sample metadata (data frame).}
-
-\item{score}{Character string indicating which score to use: "normalized" (default) or "raw" .}
 
 \item{selected_sender}{Specific sender cell type to filter, default is None (use all) (character).}
 
@@ -40,7 +37,7 @@ and generates a scatter plot of the first two principal components. Optionally, 
 # PCA of LR Interaction Scores
 data(lr_scores_eg)
 data(metadata_eg)
-res <- pca_sample(lr_scores_eg, metadata_eg, score = "normalized",
-  selected_sender = "Cardiac", selected_receiver = "Perivascular", color_by = "Age_group")
+res <- pca_sample(lr_scores_eg, metadata_eg, selected_sender = "Cardiac",
+  selected_receiver = "Perivascular", color_by = "IFN_type")
 print(res$pca_plot)
 }

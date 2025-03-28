@@ -17,7 +17,8 @@ one_step_single(
   adjust_method = "BH",
   min_adjust_p = 0.05,
   min_cor = 0,
-  min_pct = 0.1,
+  min_ratio = 0.1,
+  min_cell_ratio = 0.1,
   num_cores = 10
 )
 }
@@ -47,27 +48,30 @@ Options: "holm", "hochberg", "hommel", "bonferroni", "BH", "BY", "fdr", "none".}
 
 \item{min_cor}{Minimum correlation coefficient threshold (numeric, default 0). Must be ≥ 0.}
 
-\item{min_pct}{Minimum percentage of non-zero expression in both ligand and receptor (numeric, default 0.1).}
+\item{min_ratio}{Minimum ratio of samples in which both the ligand and receptor genes must be expressed (numeric, default 0.1).}
+
+\item{min_cell_ratio}{Minimum ratio of cells expressing ligand and receptor genes in sender or receiver cells (numeric, default 0.1).}
 
 \item{num_cores}{Number of CPU cores for parallel processing (numeric, default 10). Automatically capped at (system cores - 1).}
 }
 \value{
-A data frame with columns:
-\item{\code{cor_<method>}}{Correlation coefficient (e.g., \code{cor_spearman}).}
-\item{\code{p_<method>}}{Raw p-value (e.g., \code{p_spearman}).}
-\item{pct1, pct2}{Percent non-zero expression in sender and receiver.}
-\item{lr}{Ligand-receptor pair identifier (\code{"Ligand_Receptor"}).}
-\item{adjust.p}{Adjusted p-value.}
-\item{sender, receiver}{Sending/receiving cell types.}
-\item{\code{sample}}{Sample identifier.}
-\item{\code{score}}{Projection score (raw co-expression intensity).}
-\item{\code{normalized_score}}{Normalized score scaled between 0-1.}
+Two data frames with columns:
+\item{ligand, receptor}{Ligand and receptor gene symbols (res1/res2).}
+\item{cor}{Correlation coefficient (res1/res2).}
+\item{p_val}{Raw p-value (res1/res2).}
+\item{adjust.p}{Adjusted p-value (res1/res2).}
+\item{sender, receiver}{Sender and receiver cell types (res1/res2).}
+\item{slope}{Slope of the linear regression model (res1/res2).}
+\item{intercept}{Intercept of the linear regression model (res1/res2).}
+\item{sample}{Sample identifier (res2).}
+\item{score}{Projection score (raw co-expression intensity) (res2).}
+\item{normalized_score}{Normalized score scaled between 0-1 (res2).}
 Returns \code{NULL} if no valid pairs in either phase.
 }
 \description{
 Performs integrated analysis of ligand-receptor (LR) pairs through two consecutive phases:
 \enumerate{
-\item Filters LR pairs and analyzes correlations between specified cell types
+\item Filters LR pairs and analyzes correlations between specified cell types.
 \item Calculates projection scores based on regression models for valid pairs.
 Returns comprehensive results combining statistical metrics.
 }

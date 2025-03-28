@@ -28,13 +28,13 @@ Must contain an "lr" column with pair identifiers in "Ligand_Receptor" format.}
 \item{num_cores}{Number of CPU cores for parallel processing (numeric, default 10). Automatically capped at (system cores - 1).}
 }
 \value{
-A data frame containing projection scores for each sample and ligand-receptor (LR) pair, with the following columns:
-\item{All columns from the input \code{filtered_lr}}{}
+A data frame with projection scores per sample and LR pair. Columns:
+\item{All input from \code{filtered_lr}}{Original columns provided by the user in \code{filtered_lr}.}
 \item{sample}{Sample identifier.}
-\item{score}{Projection score indicating the co-expression intensity of the LR pair in the sample.}
-\item{normalized_score}{Normalized projection score (range 0-1) indicating the relative co-expression intensity.}
-Rows are first ordered by \code{filtered_lr} and then by the \code{score} column in descending order.
-Returns NULL if no valid pairs are found.
+\item{score}{Projection score (raw co-expression intensity).}
+\item{normalized_score}{Normalized score scaled between 0-1.}
+Rows ordered by \code{filtered_lr} columns and descending \code{score}.
+Returns \code{NULL} if no valid pairs.
 }
 \description{
 This function calculates the ligand-receptor (LR) projection scores between all combinations

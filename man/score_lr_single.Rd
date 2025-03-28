@@ -36,9 +36,9 @@ Must contain an "lr" column with pair identifiers in "Ligand_Receptor" format.}
 \value{
 A data frame with projection scores per sample and LR pair. Columns:
 \item{All input from \code{filtered_lr}}{Original columns provided by the user in \code{filtered_lr}.}
-\item{\code{sample}}{Sample identifier.}
-\item{\code{score}}{Projection score (raw co-expression intensity).}
-\item{\code{normalized_score}}{Normalized score scaled between 0-1.}
+\item{sample}{Sample identifier.}
+\item{score}{Projection score (raw co-expression intensity).}
+\item{normalized_score}{Normalized score scaled between 0-1.}
 Rows ordered by \code{filtered_lr} columns and descending \code{score}.
 Returns \code{NULL} if no valid pairs.
 }
