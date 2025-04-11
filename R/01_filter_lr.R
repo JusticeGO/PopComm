@@ -12,13 +12,13 @@
 #' @param cell_type_col Column name in Seurat metadata indicating cell type classifications (character).
 #' @param min_cells Minimum cells required per sample for both sender and receiver (numeric, default 50).
 #' @param min_samples Minimum valid samples required to proceed (numeric, default 10).
+#' @param min_cell_ratio Minimum ratio of cells expressing ligand and receptor genes in sender or receiver cells (numeric, default 0.1).
+#' @param min_sample_ratio Minimum ratio of samples in which both the ligand and receptor genes must be expressed (numeric, default 0.1).
 #' @param cor_method Correlation method: "spearman" (default), "pearson", or "kendall".
 #' @param adjust_method P-value adjustment method (default "BH" for Benjamini-Hochberg).
 #'        Options: "holm", "hochberg", "hommel", "bonferroni", "BH", "BY", "fdr", "none".
 #' @param min_adjust_p Adjusted p-value threshold for significance (numeric, default 0.05).
 #' @param min_cor Minimum correlation coefficient threshold (numeric, default 0). Must be ≥ 0.
-#' @param min_ratio Minimum ratio of samples in which both the ligand and receptor genes must be expressed (numeric, default 0.1).
-#' @param min_cell_ratio Minimum ratio of cells expressing ligand and receptor genes in sender or receiver cells (numeric, default 0.1).
 #' @param num_cores Number of CPU cores for parallel processing (numeric, default 10). Automatically capped at (system cores - 1).
 #'
 #' @return A data frame of filtered LR pairs with columns:
@@ -59,9 +59,9 @@
 filter_lr_single <- function(rna, sender, receiver, lr_database = PopComm::lr_db,
                              sample_col, cell_type_col,
                              min_cells = 50, min_samples = 10,
+                             min_cell_ratio = 0.1, min_sample_ratio = 0.1,
                              cor_method = "spearman", adjust_method = "BH",
-                             min_adjust_p = 0.05, min_cor = 0, min_ratio = 0.1,
-                             min_cell_ratio = 0.1,
+                             min_adjust_p = 0.05, min_cor = 0,
                              num_cores = 10) {
 
   # Check parameters
@@ -160,16 +160,13 @@ filter_lr_single <- function(rna, sender, receiver, lr_database = PopComm::lr_db
     y <- as.numeric(avg.r[lr$receptor_gene_symbol[i], ])
 
     # filter sample
-    data_df <- data.frame(x = x, y = y)
-    data_df <- remove_outlier(data_df)
+    # data_df <- data.frame(x = x, y = y)
+    # data_df <- remove_outlier(data_df)
+    data_df <- data.frame(x = x, y = y) |> remove_outlier() |> na.omit()
     p <- data_df$x
     q <- data_df$y
 
-    if (nrow(data_df) < min_samples || sum(p) == 0 || sum(q) == 0) {
-      return(NULL)
-    }
-
-    if (sd(p) == 0 || sd(q) == 0) {
+    if (nrow(data_df) < min_samples || length(p) == 0 || length(q) == 0 || sum(p) == 0 || sum(q) == 0 || sd(p) == 0 || sd(q) == 0) {
       return(NULL)
     }
 
@@ -184,14 +181,14 @@ filter_lr_single <- function(rna, sender, receiver, lr_database = PopComm::lr_db
     intercept <- round(coef(model)[1], 5)
 
     # cor.test
-    pct1 <- round(sum(p > 0) / length(p), 3)
-    pct2 <- round(sum(q > 0) / length(q), 3)
-
     res_cor <- tryCatch(
       cor.test(p, q, method = cor_method),
       error = function(e) NULL
       )
     if (is.null(res_cor)) return(NULL)
+
+    pct1 <- round(sum(p > 0) / length(p), 3)
+    pct2 <- round(sum(q > 0) / length(q), 3)
 
     lr_name <- paste0(row.names(avg.s)[i], "_", row.names(avg.r)[i])
 
@@ -204,8 +201,12 @@ filter_lr_single <- function(rna, sender, receiver, lr_database = PopComm::lr_db
     ))
   }
 
-  res_list <- run_parallel(1:nrow(avg.r), calc_correlation, num_cores = num_cores,
-                           export_vars = c("avg.s", "avg.r", "lr", "min_samples", "cor_method", "remove_outlier"))
+  res_list <- run_parallel(
+    1:nrow(avg.r),
+    calc_correlation,
+    num_cores = num_cores,
+    export_vars = c("avg.s", "avg.r", "lr", "min_samples", "cor_method", "remove_outlier")
+    )
   res_mat <- do.call(rbind, res_list)
   if (is.null(res_mat)) {
     message("No valid ligand-receptor pairs passed the initial filtering.")
@@ -223,8 +224,8 @@ filter_lr_single <- function(rna, sender, receiver, lr_database = PopComm::lr_db
   message("Filtering results based on adjusted p-value, correlation, and ratio thresholds...")
   res <- res[which(res$adjust.p < min_adjust_p &
                      res$cor > min_cor &
-                     res$pct1 > min_ratio &
-                     res$pct2 > min_ratio), ]
+                     res$pct1 > min_sample_ratio &
+                     res$pct2 > min_sample_ratio), ]
   res <- res[order(res$adjust.p, -res$cor), ]
   if (nrow(res) > 0) {
     row.names(res) <- 1:nrow(res)
@@ -265,13 +266,13 @@ filter_lr_single <- function(rna, sender, receiver, lr_database = PopComm::lr_db
 #' @param cell_type_col Column name in Seurat metadata indicating cell type classifications (character).
 #' @param min_cells Minimum cells required per sample for both sender and receiver (numeric, default 50).
 #' @param min_samples Minimum valid samples required to proceed (numeric, default 10).
+#' @param min_cell_ratio Minimum ratio of cells expressing ligand and receptor genes in sender or receiver cells (numeric, default 0.1).
+#' @param min_sample_ratio Minimum ratio of samples in which both the ligand and receptor genes must be expressed (numeric, default 0.1).
 #' @param cor_method Correlation method: "spearman" (default), "pearson", or "kendall".
 #' @param adjust_method P-value adjustment method (default "BH" for Benjamini-Hochberg).
 #'        Options: "holm", "hochberg", "hommel", "bonferroni", "BH", "BY", "fdr", "none".
 #' @param min_adjust_p Adjusted p-value threshold for significance (numeric, default 0.05).
 #' @param min_cor Minimum correlation coefficient threshold (numeric, default 0). Must be ≥ 0.
-#' @param min_ratio Minimum ratio of samples in which both the ligand and receptor genes must be expressed (numeric, default 0.1).
-#' @param min_cell_ratio Minimum ratio of cells expressing ligand and receptor genes in sender or receiver cells (numeric, default 0.1).
 #' @param num_cores Number of CPU cores for parallel processing (numeric, default 10). Automatically capped at (system cores - 1).
 #'
 #' @return A data frame of filtered LR pairs with columns:
@@ -308,9 +309,9 @@ filter_lr_single <- function(rna, sender, receiver, lr_database = PopComm::lr_db
 filter_lr_all <- function(rna, lr_database = PopComm::lr_db,
                           sample_col, cell_type_col,
                           min_cells = 50, min_samples = 10,
+                          min_cell_ratio = 0.1,  min_sample_ratio = 0.1,
                           cor_method = "spearman", adjust_method = "BH",
-                          min_adjust_p = 0.05, min_cor = 0, min_ratio = 0.1,
-                          min_cell_ratio = 0.1,
+                          min_adjust_p = 0.05, min_cor = 0,
                           num_cores = 10) {
 
   # Check parameters
@@ -340,12 +341,12 @@ filter_lr_all <- function(rna, lr_database = PopComm::lr_db,
       cell_type_col = "cell.type",
       min_cells = min_cells,
       min_samples = min_samples,
+      min_cell_ratio = min_cell_ratio,
+      min_sample_ratio = min_sample_ratio,
       cor_method = cor_method,
       adjust_method = adjust_method,
       min_adjust_p = min_adjust_p,
       min_cor = min_cor,
-      min_ratio = min_ratio,
-      min_cell_ratio = min_cell_ratio,
       num_cores = num_cores
     )
     if (!is.null(res) && nrow(res) > 0) {

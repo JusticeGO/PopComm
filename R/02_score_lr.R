@@ -9,7 +9,7 @@
 #' @param rna A Seurat object containing single-cell RNA expression data.
 #' @param sender Cell type designated as the ligand sender (character).
 #' @param receiver Cell type designated as the receptor receiver (character).
-#' @param filtered_lr A data frame of ligand-receptor pairs from prior analysis (e.g., output of `filter_lr_single`).
+#' @param filtered_lr A data frame of filtered ligand-receptor pairs from prior analysis (e.g., output of `filter_lr_single`).
 #'                  Must contain an "lr" column with pair identifiers in "Ligand_Receptor" format.
 #' @param sample_col Column name in Seurat metadata indicating sample identifiers (character).
 #' @param cell_type_col Column name in Seurat metadata indicating cell type classifications (character).
@@ -109,10 +109,11 @@ score_lr_single <- function(rna, sender, receiver, filtered_lr,
       ))
   }
   message("Remaining samples after filtering: ", length(valid_samples))
-  if (length(valid_samples) < 1) {
+  if (length(valid_samples) < 2) {
     message("Insufficient valid samples. Analysis stopped.")
     return(NULL)
   }
+
   rna.data <- subset(rna.data, sample %in% valid_samples)
 
   # Step 3: Load the ligand-receptor pairs after filtering for interactions
@@ -121,7 +122,7 @@ score_lr_single <- function(rna, sender, receiver, filtered_lr,
   # Step 4: Compute average expression for each sample-cell type group
   rna.data$group <- paste0(rna.data$sample, "-lr-", rna.data$cell.type)
   message("Computing average expression for each sample-cell type group...")
-  rna.avg <- Seurat::AverageExpression(rna.data, group.by = "group")$RNA
+  rna.avg <- Seurat::AverageExpression(rna.data, group.by = "group")[[1]]   # seurat v4/v5
   rna.avg <- round(rna.avg, 5)
 
   avg.s <- rna.avg[, grep(sender, colnames(rna.avg))]
@@ -142,7 +143,7 @@ score_lr_single <- function(rna, sender, receiver, filtered_lr,
     x <- as.numeric(avg.s[lr$ligand[i], ])
     y <- as.numeric(avg.r[lr$receptor[i], ])
 
-    if (sd(x) == 0 || sd(y) == 0) {
+    if (length(x) == 0 || length(y) == 0 || all(is.na(x)) || all(is.na(y)) || sd(x, na.rm = TRUE) == 0 || sd(y, na.rm = TRUE) == 0) {
       return(data.frame())
     }
 
@@ -172,7 +173,13 @@ score_lr_single <- function(rna, sender, receiver, filtered_lr,
     return(result)
   }
 
-  score_list <- run_parallel(1:nrow(avg.s), calc_projection, num_cores = num_cores)
+  score_list <- run_parallel(
+    1:nrow(avg.s),
+    calc_projection,
+    num_cores = num_cores,
+    export_vars = c("avg.s", "avg.r", "lr", "project_to_line")
+    )
+
   # Combine the results into a single data frame and remove NAs
   score.df <- bind_rows(score_list) %>% na.omit()
 

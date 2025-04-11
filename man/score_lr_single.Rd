@@ -22,7 +22,7 @@ score_lr_single(
 
 \item{receiver}{Cell type designated as the receptor receiver (character).}
 
-\item{filtered_lr}{A data frame of ligand-receptor pairs from prior analysis (e.g., output of \code{filter_lr_single}).
+\item{filtered_lr}{A data frame of filtered ligand-receptor pairs from prior analysis (e.g., output of \code{filter_lr_single}).
 Must contain an "lr" column with pair identifiers in "Ligand_Receptor" format.}
 
 \item{sample_col}{Column name in Seurat metadata indicating sample identifiers (character).}

@@ -13,12 +13,12 @@ filter_lr_single(
   cell_type_col,
   min_cells = 50,
   min_samples = 10,
+  min_cell_ratio = 0.1,
+  min_sample_ratio = 0.1,
   cor_method = "spearman",
   adjust_method = "BH",
   min_adjust_p = 0.05,
   min_cor = 0,
-  min_ratio = 0.1,
-  min_cell_ratio = 0.1,
   num_cores = 10
 )
 }
@@ -39,6 +39,10 @@ filter_lr_single(
 
 \item{min_samples}{Minimum valid samples required to proceed (numeric, default 10).}
 
+\item{min_cell_ratio}{Minimum ratio of cells expressing ligand and receptor genes in sender or receiver cells (numeric, default 0.1).}
+
+\item{min_sample_ratio}{Minimum ratio of samples in which both the ligand and receptor genes must be expressed (numeric, default 0.1).}
+
 \item{cor_method}{Correlation method: "spearman" (default), "pearson", or "kendall".}
 
 \item{adjust_method}{P-value adjustment method (default "BH" for Benjamini-Hochberg).
@@ -47,10 +51,6 @@ Options: "holm", "hochberg", "hommel", "bonferroni", "BH", "BY", "fdr", "none".}
 \item{min_adjust_p}{Adjusted p-value threshold for significance (numeric, default 0.05).}
 
 \item{min_cor}{Minimum correlation coefficient threshold (numeric, default 0). Must be ≥ 0.}
-
-\item{min_ratio}{Minimum ratio of samples in which both the ligand and receptor genes must be expressed (numeric, default 0.1).}
-
-\item{min_cell_ratio}{Minimum ratio of cells expressing ligand and receptor genes in sender or receiver cells (numeric, default 0.1).}
 
 \item{num_cores}{Number of CPU cores for parallel processing (numeric, default 10). Automatically capped at (system cores - 1).}
 }
