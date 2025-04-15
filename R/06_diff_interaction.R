@@ -7,9 +7,7 @@
 #' @param sample_col Column name in Seurat metadata indicating sample identifiers (character).
 #'
 #' @return A data frame with unique metadata per sample.
-#'
-#' @export
-#'
+#'#'
 #' @importFrom dplyr %>% bind_rows
 #' @importFrom stats lm sd coef cor.test p.adjust
 #' @importFrom utils head
@@ -17,6 +15,9 @@
 #' @examples
 #' seurat_object <- load_example_seurat()
 #' metadata <- get_sample_metadata(rna = seurat_object, sample_col = "sample")
+#'
+#' @keywords internal
+#' @noRd
 get_sample_metadata <- function(rna, sample_col) {
   metadata <- rna@meta.data
   unique_metadata <- metadata[!duplicated(metadata[[sample_col]]), ]
@@ -39,8 +40,6 @@ get_sample_metadata <- function(rna, sample_col) {
 #'
 #' @return A data frame containing correlation results (correlation coefficient and p-values).
 #'
-#' @export
-#'
 #' @importFrom dplyr %>% mutate group_by summarise left_join filter arrange select
 #' @importFrom tidyr pivot_wider
 #' @importFrom stats cor.test p.adjust
@@ -53,6 +52,9 @@ get_sample_metadata <- function(rna, sample_col) {
 #' data(metadata_eg)
 #' res <- corr_lr_interaction(lr_scores_eg, metadata_eg, correlate_with = "Age_imputation")
 #' head(res)
+#'
+#' @keywords internal
+#' @noRd
 corr_lr_interaction <- function(lr_scores, metadata, correlate_with) {
 
   score_col <- "score"
@@ -170,8 +172,6 @@ corr_lr_interaction <- function(lr_scores, metadata, correlate_with) {
 #'
 #' @return A data frame containing differential interaction results (mean scores, logFC, p-values).
 #'
-#' @export
-#'
 #' @importFrom dplyr %>% mutate group_by summarise left_join filter select
 #' @importFrom tidyr pivot_wider
 #' @importFrom stats wilcox.test p.adjust
@@ -184,6 +184,9 @@ corr_lr_interaction <- function(lr_scores, metadata, correlate_with) {
 #' res <- diff_lr_interaction(lr_scores_eg, metadata_eg, group_by = "Age_group",
 #'   ident1 = "Young", ident2 = "Old")
 #' head(res)
+#'
+#' @keywords internal
+#' @noRd
 diff_lr_interaction <- function(lr_scores, metadata, group_by, ident1, ident2) {
 
   score_col <- "score"
@@ -288,3 +291,164 @@ diff_lr_interaction <- function(lr_scores, metadata, group_by, ident1, ident2) {
 
   return(result_df)
 }
+
+
+
+#' Compare Ligand-Receptor Interaction Scores with Group Variable using Linear Regression
+#'
+#' @description
+#' Perform linear regression analysis to compare ligand-receptor (LR) interaction scores
+#' across groups, handling both continuous and binary group variables (ident1 vs ident2 or all others).
+#'
+#' @param lr_scores Data frame containing LR interaction scores per sample (data frame).
+#' @param metadata Data frame containing sample metadata (data frame).
+#' @param group_variable Column name in \code{metadata} to compare groups (categorical or continuous) (character).
+#' @param ident1 If categorical, group to compare (coded as 1) (character).
+#' @param ident2 Reference group or list of groups (coded as 0). If None, uses all others (character).
+#' @param covariates Optional list of covariate column names (character vector).
+#' @param fdr_threshold Significance cutoff for adjusted p-values (default: 0.05) (numeric).
+#'
+#' @return Data frame with ligand, receptor, sender, receiver, coef (coefficient, logFC), p-values, and adjusted p-values.
+#'
+#' @export
+#'
+#' @importFrom dplyr filter mutate inner_join group_by summarise select across all_of where arrange
+#' @importFrom tidyr pivot_wider separate
+#' @importFrom broom tidy
+#' @importFrom stats lm p.adjust reformulate
+#' @importFrom tibble column_to_rownames
+#' @importFrom purrr map_dfr
+#'
+#' @examples
+#' data(lr_scores_eg)
+#' data(metadata_eg)
+#' result <- lr_linear_model_discrete(
+#'   lr_scores_eg, metadata_eg,
+#'   group_variable = "IFN_type",
+#'   ident1 = "high",
+#'   covariates = c("Age_group", "Sex")
+#' )
+lr_linear_model_discrete <- function(lr_scores,
+                                     metadata,
+                                     group_variable,
+                                     ident1,
+                                     ident2 = NULL,
+                                     covariates = NULL,
+                                     fdr_threshold = 0.05) {
+
+  score_col <- "score"
+
+  # Parameter validation
+  if (!is.character(group_variable) || length(group_variable) != 1) {
+    stop("group_variable must be a single character string.")
+  }
+
+  if (!group_variable %in% colnames(metadata)) {
+    stop(paste0("Group variable '", group_variable, "' not found in metadata."))
+  }
+
+  if (!"sample" %in% colnames(metadata) || !"sample" %in% colnames(lr_scores)) {
+    stop("Both lr_scores and metadata must contain a 'sample' column.")
+  }
+
+  if (!is.null(covariates)) {
+    missing_covs <- setdiff(covariates, colnames(metadata))
+    if (length(missing_covs) > 0) {
+      stop("Covariates not found in metadata: ", paste(missing_covs, collapse = ", "))
+    }
+  }
+
+  metadata <- metadata %>% dplyr::mutate(sample = as.character(sample))
+  lr_scores <- lr_scores %>% dplyr::mutate(sample = as.character(sample))
+
+  # Group treatment: Continuous or categorical variables
+  if (is.numeric(metadata[[group_variable]])) {
+    metadata$group_dummy <- metadata[[group_variable]]
+    keep_samples <- metadata
+  } else {
+    if (!ident1 %in% metadata[[group_variable]]) {
+      stop(paste0("Group ident1 '", ident1, "' not found in group_variable."))
+    }
+
+    ident2 <- if (is.null(ident2)) {
+      setdiff(unique(metadata[[group_variable]]), ident1)
+    } else {
+      intersect(as.character(ident2), unique(metadata[[group_variable]]))
+    }
+
+    if (length(ident2) == 0) {
+      stop("No valid ident2 groups found in metadata.")
+    }
+
+    keep_samples <- metadata %>%
+      dplyr::filter(.data[[group_variable]] %in% c(ident1, ident2)) %>%
+      dplyr::mutate(group_dummy = as.integer(.data[[group_variable]] == ident1))
+  }
+
+  # Merge with LR scores and Create LR interaction ID
+  merged_data <- lr_scores %>%
+    dplyr::inner_join(keep_samples, by = "sample") %>%
+    dplyr::mutate(LRSR = paste(.data[["ligand"]], .data[["receptor"]], .data[["sender"]], .data[["receiver"]], sep = "_"))
+
+  # Create LRSR × sample score matrix
+  score_matrix <- merged_data %>%
+    dplyr::group_by(.data[["LRSR"]], sample) %>%
+    dplyr::summarise(mean_score = mean(.data[[score_col]], na.rm = TRUE), .groups = "drop") %>%
+    tidyr::pivot_wider(names_from = sample, values_from = mean_score, values_fill = list(mean_score = 0))
+
+  samples_order <- colnames(score_matrix)[-1]
+
+  # Preparing model data
+  model_data <- keep_samples %>%
+    dplyr::filter(sample %in% colnames(score_matrix)) %>%
+    dplyr::select(sample, .data[["group_dummy"]], dplyr::all_of(covariates)) %>%
+    dplyr::mutate(dplyr::across(dplyr::where(is.character), as.factor)) %>%
+    tibble::column_to_rownames("sample")
+
+  model_data <- model_data[samples_order, , drop = FALSE]
+
+  # linear model
+  result_df <- score_matrix %>%
+    split(~ LRSR) %>%
+    purrr::map_dfr(function(row) {
+      lrsr <- row$LRSR[1]
+      y <- as.numeric(unlist(row[,-1]))
+
+      tryCatch({
+        model_frame <- model_data
+        model_frame$y <- y
+
+        model_formula <- if (is.null(covariates)) {
+          y ~ group_dummy
+        } else {
+          reformulate(termlabels = c("group_dummy", covariates), response = "y")
+        }
+
+        # Fit model
+        fit <- stats::lm(model_formula, data = model_frame)
+        coef_row <- broom::tidy(fit) %>%
+          dplyr::filter(.data[["term"]] == "group_dummy")
+
+        data.frame(
+          LRSR = lrsr,
+          coef = coef_row$estimate,
+          p_value = coef_row$p.value
+        )
+      }, error = function(e) NULL)
+    })
+
+  # Sort out data
+  result_df <- result_df %>%
+    dplyr::mutate(adjusted_p_value = stats::p.adjust(.data[["p_value"]], method = "BH")) %>%
+    tidyr::separate(.data[["LRSR"]], into = c("ligand", "receptor", "sender", "receiver"), sep = "_") %>%
+    dplyr::filter(.data[["adjusted_p_value"]] < fdr_threshold) %>%
+    dplyr::arrange(.data[["adjusted_p_value"]]) %>%
+    dplyr::select(dplyr::all_of(c("ligand", "receptor", "sender", "receiver", "coef", "p_value", "adjusted_p_value"))) %>%
+    dplyr::mutate(coef = round(.data[["coef"]], 5),
+                  p_value = round(.data[["p_value"]], 15),
+                  adjusted_p_value = round(.data[["adjusted_p_value"]], 15))
+
+
+  return(result_df)
+}
+
