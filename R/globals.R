@@ -7,6 +7,6 @@
 # }
 if (getRversion() >= "2.15.1") {
   utils::globalVariables(c(
-    "mean_score"
+    "mean_score", "after_stat", "r.label", "p.label", "rr.label", "eq.label"
   ))
 }

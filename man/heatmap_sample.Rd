@@ -7,7 +7,7 @@
 heatmap_sample(
   lr_scores,
   metadata,
-  score = "normalized",
+  score = c("normalized", "raw"),
   selected_sender = NULL,
   selected_receiver = NULL,
   selected_metadata = NULL
