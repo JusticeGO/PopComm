@@ -7,129 +7,144 @@
 #' @param filtered_lr A data frame of ligand-receptor pairs from prior analysis (e.g., output of `filter_lr_all`),
 #'        containing at least the columns "sender", "receiver", and "cor".
 #' @param edge_width Determines edge weights, either "cor" (correlation) or "count" (interaction count) (default: "count").
-#' @param node_colors Named vector mapping cell types to colors. Example: c("Tcell" = "#E41A1C", "Macrophage" = "#377EB8"). If NULL, uses default palette.
+#' @param node_colors Named vector mapping cell types to colors. Example: c("Cardiac" = "#E41A1C", "Fibroblast" = "#377EB8"). If NULL, uses default palette.
 #' @param show_self_interactions Logical indicating whether to display self-interactions (default: TRUE).
 #'
-#' @return A ggplot object representing the network plot.
+#' @return A recordedplot object representing the network plot.
 #'
 #' @export
 #'
-#' @importFrom scales hue_pal rescale
-#' @importFrom RColorBrewer brewer.pal
-#' @importFrom dplyr %>% group_by summarise left_join rename
-#' @importFrom igraph graph_from_data_frame V layout_in_circle
-#' @importFrom ggraph ggraph geom_edge_arc geom_node_point geom_node_text scale_edge_color_gradient2 scale_edge_width create_layout
-#' @importFrom ggplot2 aes theme_void ggtitle geom_curve arrow
-#' @importFrom grid unit
+#' @importFrom scales hue_pal rescale alpha col_numeric
+#' @importFrom dplyr %>% count rename left_join
+#' @importFrom stats aggregate
+#' @importFrom igraph graph_from_adjacency_matrix V E layout_in_circle ends delete_edges
+#' @importFrom reshape2 dcast
+#' @importFrom rlang .data
+#' @importFrom grDevices recordPlot
 #'
 #' @examples
 #' # Plot Circular Cell-Cell Interaction Network
 #' data(filtered_lr_eg)
-#' p <- circle_plot(filtered_lr_eg, edge_width = "count", show_self_interactions = FALSE)
+#' p <- circle_plot(filtered_lr_eg, edge_width = "count", show_self_interactions = TRUE)
+#' print(p)
 circle_plot <- function(filtered_lr,
-                        edge_width = "count",
+                        edge_width = c("count", "cor"),
                         node_colors = NULL,
                         show_self_interactions = FALSE) {
 
   # Parameter validation
-  if (!edge_width %in% c("cor", "count"))
-    stop("edge_width must be 'cor' or 'count'")
-  if (!all(c("sender", "receiver", "cor") %in% colnames(filtered_lr)))
-    stop("filtered_lr must contain sender, receiver and cor columns")
-
-  # Add nodes: extract unique cell types from sender and receiver
-  cell_types <- unique(c(filtered_lr$sender, filtered_lr$receiver))
-
-  # Set node colors: auto generate if not provided
-  if (is.null(node_colors)) {
-    node_colors <- hue_pal()(length(cell_types))
-    names(node_colors) <- cell_types
-  } else {
-    missing_colors <- setdiff(cell_types, names(node_colors))
-    if (length(missing_colors) > 0) {
-      warning("Some nodes do not provide colors, default colors will be assigned.")
-      extra_colors <- hue_pal()(length(missing_colors))
-      names(extra_colors) <- missing_colors
-      node_colors <- c(node_colors, extra_colors)
-    }
+  edge_width <- match.arg(edge_width)
+  if (!all(c("sender", "receiver", "cor") %in% colnames(filtered_lr))) {
+    stop("Input must contain 'sender', 'receiver', and 'cor' columns.")
   }
 
-  # Calculate edge weights: use 'cor' if specified, else default to 1
+    # Build interaction matrix
   filtered_lr$weight <- if (edge_width == "cor") filtered_lr$cor else 1
 
-  # Aggregate weights for the same sender-receiver pair
-  edge_df <- filtered_lr %>%
-    group_by(sender, receiver) %>%
-    summarise(weight = sum(weight), .groups = "drop")
+  net <- filtered_lr %>%
+    dplyr::count(.data[["sender"]], .data[["receiver"]]) %>%
+    dplyr::rename(count = .data[["n"]])
 
-  # Determine the data range for normalized calculations based on the show_self_interactions parameter
-  if (show_self_interactions) {
-    norm_data <- edge_df  # 全部边
-  } else {
-    norm_data <- edge_df %>% filter(sender != receiver)
+  # Add correlation if needed
+  if (edge_width == "cor") {
+    cor_data <- stats::aggregate(weight ~ sender + receiver, data = filtered_lr, FUN = sum)
+    # net <- merge(net, cor_data, by = c("sender", "receiver"), all.x = TRUE)
+    net <- dplyr::left_join(net, cor_data, by = c("sender", "receiver"))
+    net$count <- net$weight
   }
 
-  edge_df$width_norm <- rescale(edge_df$weight,
-                                to = c(0.5, 5),
-                                from = range(norm_data$weight))
+  mat <- reshape2::dcast(net, sender ~ receiver, value.var = "count", fill = 0)
+  rownames(mat) <- mat[,1]
+  mat <- mat[,-1]
 
-  non_self_edges <- edge_df %>% filter(sender != receiver)
-  self_edges <- edge_df %>% filter(sender == receiver)
+  g <- igraph::graph_from_adjacency_matrix(as.matrix(mat), mode = "directed", weighted = TRUE)
 
-  # Build a directed graph using igraph
-  g <- graph_from_data_frame(non_self_edges, vertices = data.frame(name = cell_types), directed = TRUE)
+  # Node sizes by degree
+  vertex.weight <- rowSums(mat) + colSums(mat)
+  vertex.size <- scales::rescale(vertex.weight, to = c(10, 30))
 
-  p <- g
+  # Node colors
+  cell_types <- igraph::V(g)$name
+  if (is.null(node_colors)) {
+    color.use <- setNames(scales::alpha(scales::hue_pal()(length(cell_types)), 0.8), cell_types)
+  } else {
+    missing <- setdiff(cell_types, names(node_colors))
+    if (length(missing) > 0) {
+      auto_colors <- setNames(scales::hue_pal()(length(missing)), missing)
+      node_colors <- c(node_colors, auto_colors)
+    }
+    color.use <- scales::alpha(node_colors[cell_types], 0.8)
+  }
 
-  # p <- ggraph(g, layout = 'circle') +
-  #   geom_edge_arc(aes(edge_width = weight, edge_color = weight),
-  #                 arrow = arrow(length = unit(3, 'mm'), type = "closed"),
-  #                 curvature = 0.3, show.legend = TRUE) +
-  #   geom_node_point(aes(x = x, y = y),
-  #                   size = {
-  #                     node_weights <- sapply(cell_types, function(n) {
-  #                       sum(edge_df$weight[edge_df$sender == n | edge_df$receiver == n])
-  #                     })
-  #                     rescale(node_weights, to = c(300, 2300)) / 100
-  #                   },
-  #                   color = "black",
-  #                   fill = node_colors[V(g)$name],
-  #                   shape = 21, stroke = 0.5) +
-  #   geom_node_text(aes(x = x, y = y, label = name),
-  #                  size = 4, color = "black",
-  #                  fontface = "bold", show.legend = FALSE) +
-  #   scale_edge_width(range = c(0.5, 5)) +
-  #   scale_edge_color_gradient2(low = "#377EB8", mid = "grey80", high = "#E41A1C",
-  #                              midpoint = mean(norm_data$weight),
-  #                              limits = range(norm_data$weight)) +
-  #   theme_void() +
-  #   ggtitle("Circular Cell-Cell Interaction Network") +
-  #   coord_fixed()
-  #
-  # # 如果需要显示自交互边，则单独添加
-  # if (show_self_interactions && nrow(self_edges) > 0) {
-  #   # 使用 create_layout 获取节点坐标
-  #   layout_df <- create_layout(g, layout = "circle")
-  #   # 将自交互边与对应节点坐标合并
-  #   self_edges <- self_edges %>%
-  #     left_join(layout_df, by = c("sender" = "name")) %>%
-  #     rename(x = x, y = y) %>%
-  #     mutate(x_start_new = x,
-  #            y_start_new = y,
-  #            x_end_new = x + 0.1,  # 根据需要调整偏移量
-  #            y_end_new = y)
-  #
-  #   p <- p + geom_curve(data = self_edges,
-  #                       aes(x = x_start_new, y = y_start_new,
-  #                           xend = x_end_new, yend = y_end_new,
-  #                           color = weight, size = width_norm),
-  #                       curvature = 0.5,
-  #                       arrow = arrow(length = unit(3, "mm")))
+  # Plotting layout
+  layout <- igraph::layout_in_circle(g)
+
+  # Self-loops
+  if (show_self_interactions) {
+    loop.idx <- which(igraph::ends(g, igraph::E(g))[,1] == igraph::ends(g, igraph::E(g))[,2])
+    if (length(loop.idx) > 0) {
+      loop.nodes <- igraph::ends(g, igraph::E(g))[loop.idx, 1]
+      loop.idx.vertices <- match(loop.nodes, igraph::V(g)$name)
+      x <- layout[loop.idx.vertices, 1]
+      y <- layout[loop.idx.vertices, 2]
+      angles <- ifelse(x > 0, -atan(y / x), pi - atan(y / x))
+      igraph::E(g)$loop.angle <- NA
+      igraph::E(g)$loop.angle[loop.idx] <- angles
+    }
+  } else {
+    g <- igraph::delete_edges(g, which(igraph::ends(g, igraph::E(g))[,1] == igraph::ends(g, igraph::E(g))[,2]))
+  }
+
+  edge.width <- scales::rescale(igraph::E(g)$weight, to = c(1, 10))
+
+  w <- igraph::E(g)$weight
+  igraph::E(g)$color <- scales::col_numeric(
+    # palette = c("#377EB8", "#E41A1C"),
+    palette = c("#377EB8", "grey80", "#E41A1C"),
+    domain = range(w)
+  )(w)
+
+  # Title selection
+  plot_title <- ifelse(edge_width == "count", "Interaction Count", "Interaction Correlation")
+
+  # Conditional margin setup
+  if (show_self_interactions) {
+    margin_value <- 0.2  # Add margin only when self-interactions are shown
+  } else {
+    margin_value <- 0  # No extra margin when no self-interactions
+  }
+
+  # font_family <- if (.Platform$OS.type == "windows") {
+  #   "sans"
+  # } else {
+  #   if ("Arial" %in% names(grDevices::postscriptFonts())) {
+  #     "Arial"
+  #   } else {
+  #     "sans"
+  #   }
   # }
 
+  plot(g,
+       layout = layout,
+       edge.arrow.size = 0.6,
+       edge.arrow.width = 1.2,
+       edge.curved = 0.2,
+       edge.width = edge.width,
+       edge.color = igraph::E(g)$color,
+       vertex.color = color.use,
+       vertex.label.family = "sans",
+       vertex.label.color = "black",
+       vertex.label.cex = 1.2,
+       vertex.size = vertex.size,
+       vertex.frame.color = "black",
+       vertex.frame.width = 1.5,
+       margin = margin_value,
+       main = plot_title
+  )
+
+  p <- grDevices::recordPlot()
   return(p)
 }
-
 
 
 #' Create Ligand-Receptor Interaction Dot Plot

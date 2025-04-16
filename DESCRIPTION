@@ -30,15 +30,14 @@ Imports:
     Matrix (>= 1.2-0),
     ggplot2 (>= 3.3.0),
     ggpubr (>= 0.6.0),
-    ggraph (>= 2.0.5),
     pheatmap (>= 1.0.12),
     RColorBrewer,
+    reshape2 (>= 1.4.1),
     scales (>= 1.1.1),
     igraph (>= 2.0.0),
     parallel,
     pbmcapply (>= 1.5.0),
-    grDevices,
-    grid
+    grDevices
 License: MIT + file LICENSE
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)

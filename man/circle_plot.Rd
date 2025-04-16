@@ -6,7 +6,7 @@
 \usage{
 circle_plot(
   filtered_lr,
-  edge_width = "count",
+  edge_width = c("count", "cor"),
   node_colors = NULL,
   show_self_interactions = FALSE
 )
@@ -17,12 +17,12 @@ containing at least the columns "sender", "receiver", and "cor".}
 
 \item{edge_width}{Determines edge weights, either "cor" (correlation) or "count" (interaction count) (default: "count").}
 
-\item{node_colors}{Named vector mapping cell types to colors. Example: c("Tcell" = "#E41A1C", "Macrophage" = "#377EB8"). If NULL, uses default palette.}
+\item{node_colors}{Named vector mapping cell types to colors. Example: c("Cardiac" = "#E41A1C", "Fibroblast" = "#377EB8"). If NULL, uses default palette.}
 
 \item{show_self_interactions}{Logical indicating whether to display self-interactions (default: TRUE).}
 }
 \value{
-A ggplot object representing the network plot.
+A recordedplot object representing the network plot.
 }
 \description{
 Plots a circular ligand-receptor (LR) interaction network with curved directed edges.
@@ -31,5 +31,6 @@ Nodes are arranged in a circle, and edge widths and colors represent interaction
 \examples{
 # Plot Circular Cell-Cell Interaction Network
 data(filtered_lr_eg)
-p <- circle_plot(filtered_lr_eg, edge_width = "count", show_self_interactions = FALSE)
+p <- circle_plot(filtered_lr_eg, edge_width = "count", show_self_interactions = TRUE)
+print(p)
 }
