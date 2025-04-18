@@ -1,2 +1,2 @@
 # PopComm
-Population-Level Cell Communication Analysis
+Population-Level Cell-Cell Communication Analysis Tools
