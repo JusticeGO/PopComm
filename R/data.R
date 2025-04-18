@@ -17,7 +17,7 @@
 #'   \item{evidence}{Character. PubMed IDs (PMIDs) supporting the interaction, comma-separated (e.g., "15721238")}
 #' }
 #'
-#' @source Source from CellTalkDB (\url{http://tcm.zju.edu.cn/celltalkdb/}).
+#' @source Source from CellTalkDB (PMID: 33147626).
 "lr_db"
 
 
@@ -41,7 +41,7 @@
 #' }
 #' @source Subset of snRNA-seq data analyzed in our study,
 #' processed via standard workflow (see manuscript for details).
-#' Full dataset available at \href{https://zenodo.org/record/XXXXX}{Zenodo}
+#' Full dataset available at \href{https://zenodo.org/}{Zenodo}
 #' (DOI: 10.XXXX/zenodo.XXXXX).
 #' @keywords internal
 #' @export

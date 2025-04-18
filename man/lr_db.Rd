@@ -20,7 +20,7 @@ A data frame with 3,398 rows (pairs) and 10 columns:
 }
 }
 \source{
-Source from CellTalkDB (\url{http://tcm.zju.edu.cn/celltalkdb/}).
+Source from CellTalkDB (PMID: 33147626).
 }
 \usage{
 lr_db

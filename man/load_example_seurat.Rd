@@ -19,7 +19,7 @@ A \code{\link[Seurat]{Seurat}} object with the following slots:
 \source{
 Subset of snRNA-seq data analyzed in our study,
 processed via standard workflow (see manuscript for details).
-Full dataset available at \href{https://zenodo.org/record/XXXXX}{Zenodo}
+Full dataset available at \href{https://zenodo.org/}{Zenodo}
 (DOI: 10.XXXX/zenodo.XXXXX).
 }
 \usage{
