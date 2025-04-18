@@ -306,7 +306,7 @@ diff_lr_interaction <- function(lr_scores, metadata, group_by, ident1, ident2) {
 #' @param ident1 If categorical, group to compare (coded as 1) (character).
 #' @param ident2 Reference group or list of groups (coded as 0). If None, uses all others (character).
 #' @param covariates Optional list of covariate column names (character vector).
-#' @param fdr_threshold Significance cutoff for adjusted p-values (default: 0.05) (numeric).
+#' @param fdr_threshold Significance cutoff for adjusted p-values (numeric, default: 0.05).
 #'
 #' @return Data frame with ligand, receptor, sender, receiver, coef (coefficient, logFC), p-values, and adjusted p-values.
 #'
@@ -328,6 +328,8 @@ diff_lr_interaction <- function(lr_scores, metadata, group_by, ident1, ident2) {
 #'   ident1 = "high",
 #'   covariates = c("Age_group", "Sex")
 #' )
+#'
+#' head(result)
 lr_linear_model_discrete <- function(lr_scores,
                                      metadata,
                                      group_variable,

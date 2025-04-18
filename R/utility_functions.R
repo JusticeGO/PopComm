@@ -24,6 +24,17 @@
 #' @keywords internal
 #' @noRd
 run_parallel <- function(iterations, FUN, num_cores = 1, export_vars = NULL) {
+  safe_FUN <- function(...) {
+    res <- tryCatch(
+      suppressWarnings(FUN(...)),
+      error = function(e) {
+        message(sprintf("Error: %s", conditionMessage(e)))
+        return(NULL)
+      }
+    )
+    return(res)
+  }
+
   # Check if the operating system is Windows
   if (Sys.info()["sysname"] == "Windows") {
     # For Windows, create a cluster and use parallel::parLapply
@@ -32,11 +43,12 @@ run_parallel <- function(iterations, FUN, num_cores = 1, export_vars = NULL) {
     if (!is.null(export_vars)) {
       parallel::clusterExport(cl, varlist = export_vars, envir = parent.frame())
     }
-    result <- parallel::parLapply(cl, iterations, FUN)
+    result <- parallel::parLapply(cl, iterations, safe_FUN)
   } else {
     # For other operating systems, use pbmcapply::pbmclapply for parallel processing
-    result <- pbmcapply::pbmclapply(iterations, FUN, mc.cores = num_cores)
+    result <- pbmcapply::pbmclapply(iterations, safe_FUN, mc.cores = num_cores)
   }
+
   return(result)
 }
 

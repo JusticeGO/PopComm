@@ -144,7 +144,7 @@ heatmap_sample <- function(lr_scores,
 #' @param selected_sender Specific sender cell type to filter, default is None (use all) (character).
 #' @param selected_receiver Specific receiver cell type to filter, default is None (use all) (character).
 #' @param color_by \code{metadata} column name to color points in PCA plot (character).
-#' @param n_components Number of principal components to extract (default: 2) (numeric).
+#' @param n_components Number of principal components to extract (numeric, default: 2).
 #'
 #' @return A list with two elements: the first is a ggplot2 PCA scatter plot and the second is the PCA results data frame.
 #'
@@ -286,8 +286,8 @@ pca_sample <- function(lr_scores,
 #' @param receiver Receiver cell type to filter (character).
 #' @param group_by Column name in \code{metadata} to group samples (character).
 #' @param score Use 'normalized' or 'raw' score (default: "normalized") (character).
-#' @param test Whether to add a statistical test annotation (default: TRUE) (logical).
-#' @param paired Whether to treat the comparison as paired (default: FALSE) (logical).
+#' @param test Whether to add a statistical test annotation (logical, default: TRUE).
+#' @param paired Whether to treat the comparison as paired (logical, default: FALSE).
 #' @param test_method Statistical test to use: "t.test" or "wilcox.test" (default = "wilcox.test") (character).
 #' @param colors Vector of colors for groups (default: c("#5fa9d1", "#154778")).
 #' @param title Custom plot title (optional).
@@ -428,9 +428,9 @@ boxplot_lr_group_comparison <- function(lr_scores, metadata,
 #' @param receiver Receiver cell type to filter (character).
 #' @param group_by Continuous variable column in \code{metadata} (e.g., age, severity score) (character).
 #' @param score Use 'normalized' or 'raw' score (default: "normalized") (character).
-#' @param point_size Size of the points in the plot (default: 3) (numeric).
+#' @param point_size Size of the points in the plot (numeric, default: 3).
 #' @param point_color Color of the points in the plot (default: "dodgerblue4").
-#' @param add_regression Whether to add regression line (default: TRUE) (logical).
+#' @param add_regression Whether to add regression line (logical, default: TRUE).
 #' @param title Custom plot title (optional).
 #'
 #' @return A list containing:
@@ -443,7 +443,7 @@ boxplot_lr_group_comparison <- function(lr_scores, metadata,
 #'
 #' @importFrom dplyr filter select left_join
 #' @importFrom tibble rownames_to_column
-#' @importFrom ggplot2 ggplot aes geom_point labs theme_bw theme element_text ggtitle geom_smooth
+#' @importFrom ggplot2 ggplot aes geom_point labs theme_bw theme element_text ggtitle geom_smooth after_stat
 #' @importFrom ggpubr stat_regline_equation stat_cor
 #' @importFrom stats na.omit
 #'
@@ -455,7 +455,7 @@ boxplot_lr_group_comparison <- function(lr_scores, metadata,
 #'   lr_scores_eg, metadata_eg,
 #'   ligand = "TAC4", receptor = "TACR1",
 #'   sender = "Perivascular", receiver = "Cardiac",
-#'   group_by = "IFN_type"
+#'   group_by = "IFNscore"
 #' )
 #' head(result$df)
 dotplot_lr_continuous_group <- function(lr_scores, metadata,

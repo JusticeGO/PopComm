@@ -36,7 +36,7 @@
 #'
 #' @importFrom dplyr %>% bind_rows
 #' @importFrom stats lm sd coef cor.test p.adjust
-#' @importFrom utils head
+#' @importFrom utils head packageVersion
 #' @importFrom Matrix rowSums
 #'
 #' @examples
@@ -125,10 +125,17 @@ filter_lr_single <- function(rna, sender, receiver, lr_database = PopComm::lr_db
   sender_cells <- colnames(rna.data)[rna.data$cell.type == sender]
   receiver_cells <- colnames(rna.data)[rna.data$cell.type == receiver]
 
-  expr <- Seurat::GetAssayData(rna.data, slot = "data")
+  seurat_version <- as.numeric(strsplit(as.character(packageVersion("Seurat")), "\\.")[[1]][[1]])
+  if (seurat_version >= 5) {
+    expr <- Seurat::GetAssayData(rna.data, layer = "data")  # Seurat v5
+  } else {
+    expr <- Seurat::GetAssayData(rna.data, slot = "data")   # Seurat v4
+  }
+  # expr <- Seurat::GetAssayData(rna.data, slot = "data")
+  expr <- as.matrix(expr)
 
-  sender_ratio <- rowSums(expr[, sender_cells] > 0) / length(sender_cells)
-  receiver_ratio <- rowSums(expr[, receiver_cells] > 0) / length(receiver_cells)
+  sender_ratio <- rowSums(expr[, sender_cells, drop = FALSE] > 0) / length(sender_cells)
+  receiver_ratio <- rowSums(expr[, receiver_cells, drop = FALSE] > 0) / length(receiver_cells)
 
   lr <- lr[lr$ligand_gene_symbol %in% names(sender_ratio[sender_ratio > min_cell_ratio]), ]
   lr <- lr[lr$receptor_gene_symbol %in% names(receiver_ratio[receiver_ratio > min_cell_ratio]), ]
@@ -207,7 +214,10 @@ filter_lr_single <- function(rna, sender, receiver, lr_database = PopComm::lr_db
     num_cores = num_cores,
     export_vars = c("avg.s", "avg.r", "lr", "min_samples", "cor_method", "remove_outlier")
     )
-  res_mat <- do.call(rbind, res_list)
+
+  # res_mat <- do.call(rbind, res_list)
+  res_mat <- do.call(rbind, Filter(Negate(is.null), res_list))
+
   if (is.null(res_mat)) {
     message("No valid ligand-receptor pairs passed the initial filtering.")
     return(NULL)

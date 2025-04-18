@@ -46,7 +46,8 @@
 #' @keywords internal
 #' @export
 load_example_seurat <- function() {
-  url <- "https://sandbox.zenodo.org/records/167208/files/example_seurat_obj.rds"
+  # url <- "https://sandbox.zenodo.org/records/167208/files/example_seurat_obj.rds"
+  url <- "https://sandbox.zenodo.org/records/198976/files/example_seurat_obj.rds"
   temp_file <- tempfile(fileext = ".rds")
 
   old_timeout <- getOption("timeout")
@@ -75,4 +76,7 @@ load_example_seurat <- function() {
 
 #' Example for metadata
 "metadata_eg"
+
+#' #' Example for seurat object
+#' "seurat_object"
 

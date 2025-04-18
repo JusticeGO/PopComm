@@ -181,6 +181,7 @@ score_lr_single <- function(rna, sender, receiver, filtered_lr,
     )
 
   # Combine the results into a single data frame and remove NAs
+  score_list <- score_list[sapply(score_list, function(x) nrow(x) > 0)]
   score.df <- bind_rows(score_list) %>% na.omit()
 
   message("Analyzing ligand-receptor projection scores process complete.")
@@ -225,7 +226,7 @@ score_lr_single <- function(rna, sender, receiver, filtered_lr,
 #' seurat_object <- load_example_seurat()
 #' data(lr_db)
 #'
-#' #' # Analyzing ligand-receptor interactions between all cell types
+#' # Analyzing ligand-receptor interactions between all cell types
 #' result01a <- filter_lr_all(
 #'   rna = seurat_object,
 #'   lr_database = lr_db,

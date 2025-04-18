@@ -8,7 +8,8 @@
 #'        containing at least the columns "sender", "receiver", and "cor".
 #' @param edge_width Determines edge weights, either "cor" (correlation) or "count" (interaction count) (default: "count").
 #' @param node_colors Named vector mapping cell types to colors. Example: c("Cardiac" = "#E41A1C", "Fibroblast" = "#377EB8"). If NULL, uses default palette.
-#' @param show_self_interactions Logical indicating whether to display self-interactions (default: TRUE).
+#' @param show_self_interactions Logical indicating whether to display self-interactions (logical, default: TRUE).
+#' @param cutoff Minimum edge weight to display (numeric, default: 0).
 #'
 #' @return A recordedplot object representing the network plot.
 #'
@@ -30,7 +31,8 @@
 circle_plot <- function(filtered_lr,
                         edge_width = c("count", "cor"),
                         node_colors = NULL,
-                        show_self_interactions = FALSE) {
+                        show_self_interactions = TRUE,
+                        cutoff = 0) {
 
   # Parameter validation
   edge_width <- match.arg(edge_width)
@@ -52,6 +54,9 @@ circle_plot <- function(filtered_lr,
     net <- dplyr::left_join(net, cor_data, by = c("sender", "receiver"))
     net$count <- net$weight
   }
+
+  # Filter edges by cutoff
+  net <- net[net$count >= cutoff, ]
 
   mat <- reshape2::dcast(net, sender ~ receiver, value.var = "count", fill = 0)
   rownames(mat) <- mat[,1]
@@ -178,11 +183,13 @@ circle_plot <- function(filtered_lr,
 #' print(p)
 dot_plot <- function(filtered_lr,
                      top_n = 5,
-                     axis = "LR-SR",
-                     type_scale = "size",
+                     axis = c("LR-SR", "SR-LR"),
+                     type_scale = c("size", "radius"),
                      selected_LR = NULL) {
 
   # Parameter validation
+  axis <- match.arg(axis)
+  type_scale <- match.arg(type_scale)
   if (!all(c("ligand", "receptor", "sender", "receiver", "cor", "adjust.p") %in% colnames(filtered_lr)))
     stop("filtered_lr must contain columns: ligand, receptor, sender, receiver, cor, and adjust.p")
 

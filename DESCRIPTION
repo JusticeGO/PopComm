@@ -1,17 +1,20 @@
 Package: PopComm
-Title: Population-Level Cell Communication Analysis
-Version: 0.0.1.2
+Title: Population-Level cell-Cell Communication Analysis Tools
+Version: 0.1.0.0
 Authors@R: 
-    person("Zheng", "Gong", , "gongzheng131@hotmail.com", role = c("aut", "cre"),
-           comment = c(ORCID = "0000-0001-7285-2630"))
-Description: Facilitates population-level analysis of ligand-receptor interactions 
+    c(person(given = "Zheng", family = "Gong", email = "gongzheng131@hotmail.com", role = c("aut", "cre"), 
+    comment = c(ORCID = "0000-0001-7285-2630")),
+    person(given = "Mengwei", family = "Li", email = "limengwei833@gmail.com", role = c("aut", "ctb"),
+    comment = c(ORCID = "0000-0001-6163-2827")))
+Description: Facilitates population-level analysis of ligand-receptor (LR) interactions 
     using large-scale single-cell transcriptomic data. Identifies significant LR pairs 
     and quantifies their interactions through correlation-based filtering and projection score 
     computations. Designed for large-sample single-cell studies, the package employs 
     statistical modeling, including linear regression, to investigate LR relationships 
     between cell types. It provides a systematic framework for understanding cell-cell 
     communication, uncovering regulatory interactions and signaling mechanisms. 
-    Future updates will enhance visualization and downstream analyses for improved biological interpretation.
+    Offers tools for LR pair-level, sample-level, and differential interaction analyses, 
+    with comprehensive visualization support to aid biological interpretation.
 URL: https://github.com/JusticeGO/PopComm
 BugReports: https://github.com/JusticeGO/PopComm/issues
 biocViews:
