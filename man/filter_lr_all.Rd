@@ -44,7 +44,7 @@ Options: "holm", "hochberg", "hommel", "bonferroni", "BH", "BY", "fdr", "none".}
 
 \item{min_adjust_p}{Adjusted p-value threshold for significance (numeric, default 0.05).}
 
-\item{min_cor}{Minimum correlation coefficient threshold (numeric, default 0). Must be ≥ 0.}
+\item{min_cor}{Minimum correlation coefficient threshold (numeric, default 0). Must be \eqn{\ge}{>=} 0.}
 
 \item{num_cores}{Number of CPU cores for parallel processing (numeric, default 10). Automatically capped at (system cores - 1).}
 }
@@ -65,18 +65,21 @@ Filters ligand-receptor (LR) pairs and analyzes their correlations for all possi
 and returning significant LR pairs based on user-defined thresholds.
 }
 \examples{
-seurat_object <- load_example_seurat()
-data(lr_db)
+\donttest{
+  # Long-running example (may take >10s)
+  seurat_object <- load_example_seurat()
+  data(lr_db)
 
-# Analyzing ligand-receptor interactions between all cell types
-result01a <- filter_lr_all(
-  rna = seurat_object,
-  lr_database = lr_db,
-  sample_col = "sample",
-  cell_type_col = "cell.type",
-  min_cells = 20,
-  min_samples = 10,
-  min_adjust_p = 0.5,
-  num_cores = 1
-)
+  # Analyzing ligand-receptor interactions between all cell types
+  result01a <- filter_lr_all(
+    rna = seurat_object,
+    lr_database = lr_db,
+    sample_col = "sample",
+    cell_type_col = "cell.type",
+    min_cells = 20,
+    min_samples = 10,
+    min_adjust_p = 0.5,
+    num_cores = 1
+  )
+}
 }

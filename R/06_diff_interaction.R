@@ -320,16 +320,19 @@ diff_lr_interaction <- function(lr_scores, metadata, group_by, ident1, ident2) {
 #' @importFrom purrr map_dfr
 #'
 #' @examples
-#' data(lr_scores_eg)
-#' data(metadata_eg)
-#' result <- lr_linear_model_discrete(
-#'   lr_scores_eg, metadata_eg,
-#'   group_variable = "IFN_type",
-#'   ident1 = "high",
-#'   covariates = c("Age_group", "Sex")
-#' )
+#' \donttest{
+#'   # Long-running example (may take >10s)
+#'   data(lr_scores_eg)
+#'   data(metadata_eg)
 #'
-#' head(result)
+#'   result <- lr_linear_model_discrete(
+#'     lr_scores_eg, metadata_eg,
+#'     group_variable = "IFN_type",
+#'     ident1 = "high",
+#'     covariates = c("Age_group", "Sex")
+#'   )
+#'   head(result)
+#' }
 lr_linear_model_discrete <- function(lr_scores,
                                      metadata,
                                      group_variable,

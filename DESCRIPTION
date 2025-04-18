@@ -15,11 +15,9 @@ Description: Facilitates population-level analysis of ligand-receptor (LR) inter
     communication, uncovering regulatory interactions and signaling mechanisms. 
     Offers tools for LR pair-level, sample-level, and differential interaction analyses, 
     with comprehensive visualization support to aid biological interpretation.
-URL: https://github.com/JusticeGO/PopComm
-BugReports: https://github.com/JusticeGO/PopComm/issues
 biocViews:
 Depends:
-    R (>= 4.0.0)
+    R (>= 4.1.0)
 Imports:
     Seurat (>= 4.1.0),
     broom (>= 1.0.0),

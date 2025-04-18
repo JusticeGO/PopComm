@@ -42,28 +42,31 @@ of sender and receiver cell types. The projection score is computed based on lin
 measuring the normalized distance of each sample's LR expression from the origin of the regression line.
 }
 \examples{
-seurat_object <- load_example_seurat()
-data(lr_db)
+\donttest{
+  # Long-running example (may take >10s)
+  seurat_object <- load_example_seurat()
+  data(lr_db)
 
-# Analyzing ligand-receptor interactions between all cell types
-result01a <- filter_lr_all(
-  rna = seurat_object,
-  lr_database = lr_db,
-  sample_col = "sample",
-  cell_type_col = "cell.type",
-  min_cells = 20,
-  min_samples = 10,
-  min_adjust_p = 0.5,
-  num_cores = 1
-)
+  # Analyzing ligand-receptor interactions between all cell types
+  result01a <- filter_lr_all(
+    rna = seurat_object,
+    lr_database = lr_db,
+    sample_col = "sample",
+    cell_type_col = "cell.type",
+    min_cells = 20,
+    min_samples = 10,
+    min_adjust_p = 0.5,
+    num_cores = 1
+  )
 
-# Analyzing ligand-receptor projection scores between all cell types
-result02a <- score_lr_all(
-  rna = seurat_object,
-  filtered_lr = result01a,
-  sample_col = "sample",
-  cell_type_col = "cell.type",
-  min_cells = 20,
-  num_cores = 1
-)
+  # Analyzing ligand-receptor projection scores between all cell types
+  result02a <- score_lr_all(
+    rna = seurat_object,
+    filtered_lr = result01a,
+    sample_col = "sample",
+    cell_type_col = "cell.type",
+    min_cells = 20,
+    num_cores = 1
+  )
+}
 }

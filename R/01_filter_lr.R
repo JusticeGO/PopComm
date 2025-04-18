@@ -18,7 +18,7 @@
 #' @param adjust_method P-value adjustment method (default "BH" for Benjamini-Hochberg).
 #'        Options: "holm", "hochberg", "hommel", "bonferroni", "BH", "BY", "fdr", "none".
 #' @param min_adjust_p Adjusted p-value threshold for significance (numeric, default 0.05).
-#' @param min_cor Minimum correlation coefficient threshold (numeric, default 0). Must be ≥ 0.
+#' @param min_cor Minimum correlation coefficient threshold (numeric, default 0). Must be \eqn{\ge}{>=} 0.
 #' @param num_cores Number of CPU cores for parallel processing (numeric, default 10). Automatically capped at (system cores - 1).
 #'
 #' @return A data frame of filtered LR pairs with columns:
@@ -40,22 +40,25 @@
 #' @importFrom Matrix rowSums
 #'
 #' @examples
-#' seurat_object <- load_example_seurat()
-#' data(lr_db)
+#' \donttest{
+#'   # Long-running example (may take >10s)
+#'   seurat_object <- load_example_seurat()
+#'   data(lr_db)
 #'
-#' # Analyzing ligand-receptor interactions: Cardiac -> Perivascular
-#' result01s <- filter_lr_single(
-#'   rna = seurat_object,
-#'   sender = "Cardiac",
-#'   receiver = "Perivascular",
-#'   lr_database = lr_db,
-#'   sample_col = "sample",
-#'   cell_type_col = "cell.type",
-#'   min_cells = 20,
-#'   min_samples = 10,
-#'   min_adjust_p = 0.5,
-#'   num_cores = 1
-#' )
+#'   # Analyzing ligand-receptor interactions: Cardiac -> Perivascular
+#'   result01s <- filter_lr_single(
+#'     rna = seurat_object,
+#'     sender = "Cardiac",
+#'     receiver = "Perivascular",
+#'     lr_database = lr_db,
+#'     sample_col = "sample",
+#'     cell_type_col = "cell.type",
+#'     min_cells = 20,
+#'     min_samples = 10,
+#'     min_adjust_p = 0.5,
+#'     num_cores = 1
+#'   )
+#' }
 filter_lr_single <- function(rna, sender, receiver, lr_database = PopComm::lr_db,
                              sample_col, cell_type_col,
                              min_cells = 50, min_samples = 10,
@@ -282,7 +285,7 @@ filter_lr_single <- function(rna, sender, receiver, lr_database = PopComm::lr_db
 #' @param adjust_method P-value adjustment method (default "BH" for Benjamini-Hochberg).
 #'        Options: "holm", "hochberg", "hommel", "bonferroni", "BH", "BY", "fdr", "none".
 #' @param min_adjust_p Adjusted p-value threshold for significance (numeric, default 0.05).
-#' @param min_cor Minimum correlation coefficient threshold (numeric, default 0). Must be ≥ 0.
+#' @param min_cor Minimum correlation coefficient threshold (numeric, default 0). Must be \eqn{\ge}{>=} 0.
 #' @param num_cores Number of CPU cores for parallel processing (numeric, default 10). Automatically capped at (system cores - 1).
 #'
 #' @return A data frame of filtered LR pairs with columns:
@@ -302,20 +305,23 @@ filter_lr_single <- function(rna, sender, receiver, lr_database = PopComm::lr_db
 #' @importFrom utils combn head
 #'
 #' @examples
-#' seurat_object <- load_example_seurat()
-#' data(lr_db)
+#' \donttest{
+#'   # Long-running example (may take >10s)
+#'   seurat_object <- load_example_seurat()
+#'   data(lr_db)
 #'
-#' # Analyzing ligand-receptor interactions between all cell types
-#' result01a <- filter_lr_all(
-#'   rna = seurat_object,
-#'   lr_database = lr_db,
-#'   sample_col = "sample",
-#'   cell_type_col = "cell.type",
-#'   min_cells = 20,
-#'   min_samples = 10,
-#'   min_adjust_p = 0.5,
-#'   num_cores = 1
-#' )
+#'   # Analyzing ligand-receptor interactions between all cell types
+#'   result01a <- filter_lr_all(
+#'     rna = seurat_object,
+#'     lr_database = lr_db,
+#'     sample_col = "sample",
+#'     cell_type_col = "cell.type",
+#'     min_cells = 20,
+#'     min_samples = 10,
+#'     min_adjust_p = 0.5,
+#'     num_cores = 1
+#'   )
+#' }
 filter_lr_all <- function(rna, lr_database = PopComm::lr_db,
                           sample_col, cell_type_col,
                           min_cells = 50, min_samples = 10,

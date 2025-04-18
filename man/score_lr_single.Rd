@@ -49,32 +49,35 @@ based on linear regression models, measuring the normalized distance of each sam
 LR expression from the origin of the regression line.
 }
 \examples{
-seurat_object <- load_example_seurat()
-data(lr_db)
+\donttest{
+  # Long-running example (may take >10s)
+  seurat_object <- load_example_seurat()
+  data(lr_db)
 
-# Analyzing ligand-receptor interactions: Cardiac -> Perivascular
-result01s <- filter_lr_single(
-  rna = seurat_object,
-  sender = "Cardiac",
-  receiver = "Perivascular",
-  lr_database = lr_db,
-  sample_col = "sample",
-  cell_type_col = "cell.type",
-  min_cells = 20,
-  min_samples = 10,
-  min_adjust_p = 0.5,
-  num_cores = 1
-)
+  # Analyzing ligand-receptor interactions: Cardiac -> Perivascular
+  result01s <- filter_lr_single(
+    rna = seurat_object,
+    sender = "Cardiac",
+    receiver = "Perivascular",
+    lr_database = lr_db,
+    sample_col = "sample",
+    cell_type_col = "cell.type",
+    min_cells = 20,
+    min_samples = 10,
+    min_adjust_p = 0.5,
+    num_cores = 1
+  )
 
-# Analyzing ligand-receptor projection scores: Cardiac -> Perivascular
-result02s <- score_lr_single(
-  rna = seurat_object,
-  sender = "Cardiac",
-  receiver = "Perivascular",
-  filtered_lr = result01s,
-  sample_col = "sample",
-  cell_type_col = "cell.type",
-  min_cells = 20,
-  num_cores = 1
-)
+  # Analyzing ligand-receptor projection scores: Cardiac -> Perivascular
+  result02s <- score_lr_single(
+    rna = seurat_object,
+    sender = "Cardiac",
+    receiver = "Perivascular",
+    filtered_lr = result01s,
+    sample_col = "sample",
+    cell_type_col = "cell.type",
+    min_cells = 20,
+    num_cores = 1
+  )
+}
 }
