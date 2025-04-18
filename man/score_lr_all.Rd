@@ -45,7 +45,7 @@ measuring the normalized distance of each sample's LR expression from the origin
 seurat_object <- load_example_seurat()
 data(lr_db)
 
-#' # Analyzing ligand-receptor interactions between all cell types
+# Analyzing ligand-receptor interactions between all cell types
 result01a <- filter_lr_all(
   rna = seurat_object,
   lr_database = lr_db,

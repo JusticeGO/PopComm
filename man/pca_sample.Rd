@@ -24,7 +24,7 @@ pca_sample(
 
 \item{color_by}{\code{metadata} column name to color points in PCA plot (character).}
 
-\item{n_components}{Number of principal components to extract (default: 2) (numeric).}
+\item{n_components}{Number of principal components to extract (numeric, default: 2).}
 }
 \value{
 A list with two elements: the first is a ggplot2 PCA scatter plot and the second is the PCA results data frame.

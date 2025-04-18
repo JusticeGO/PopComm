@@ -7,8 +7,8 @@
 dot_plot(
   filtered_lr,
   top_n = 5,
-  axis = "LR-SR",
-  type_scale = "size",
+  axis = c("LR-SR", "SR-LR"),
+  type_scale = c("size", "radius"),
   selected_LR = NULL
 )
 }

@@ -36,11 +36,11 @@ dotplot_lr_continuous_group(
 
 \item{score}{Use 'normalized' or 'raw' score (default: "normalized") (character).}
 
-\item{point_size}{Size of the points in the plot (default: 3) (numeric).}
+\item{point_size}{Size of the points in the plot (numeric, default: 3).}
 
 \item{point_color}{Color of the points in the plot (default: "dodgerblue4").}
 
-\item{add_regression}{Whether to add regression line (default: TRUE) (logical).}
+\item{add_regression}{Whether to add regression line (logical, default: TRUE).}
 
 \item{title}{Custom plot title (optional).}
 }
@@ -63,7 +63,7 @@ result <- dotplot_lr_continuous_group(
   lr_scores_eg, metadata_eg,
   ligand = "TAC4", receptor = "TACR1",
   sender = "Perivascular", receiver = "Cardiac",
-  group_by = "IFN_type"
+  group_by = "IFNscore"
 )
 head(result$df)
 }

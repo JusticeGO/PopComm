@@ -8,7 +8,8 @@ circle_plot(
   filtered_lr,
   edge_width = c("count", "cor"),
   node_colors = NULL,
-  show_self_interactions = FALSE
+  show_self_interactions = TRUE,
+  cutoff = 0
 )
 }
 \arguments{
@@ -19,7 +20,9 @@ containing at least the columns "sender", "receiver", and "cor".}
 
 \item{node_colors}{Named vector mapping cell types to colors. Example: c("Cardiac" = "#E41A1C", "Fibroblast" = "#377EB8"). If NULL, uses default palette.}
 
-\item{show_self_interactions}{Logical indicating whether to display self-interactions (default: TRUE).}
+\item{show_self_interactions}{Logical indicating whether to display self-interactions (logical, default: TRUE).}
+
+\item{cutoff}{Minimum edge weight to display (numeric, default: 0).}
 }
 \value{
 A recordedplot object representing the network plot.

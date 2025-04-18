@@ -3,9 +3,9 @@
 lr_db <- read.delim("data-raw/human_lr_pair.txt")
 usethis::use_data(lr_db, overwrite = TRUE)
 
-# Example
+# Example seurat object
 # seurat_object <- readRDS("data-raw/example_seurat_obj.rds")
-# usethis::use_data(seurat_object)
+# usethis::use_data(seurat_object, overwrite = TRUE)
 
 
 # Example filter_lr_eg

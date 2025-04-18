@@ -37,9 +37,9 @@ boxplot_lr_group_comparison(
 
 \item{score}{Use 'normalized' or 'raw' score (default: "normalized") (character).}
 
-\item{test}{Whether to add a statistical test annotation (default: TRUE) (logical).}
+\item{test}{Whether to add a statistical test annotation (logical, default: TRUE).}
 
-\item{paired}{Whether to treat the comparison as paired (default: FALSE) (logical).}
+\item{paired}{Whether to treat the comparison as paired (logical, default: FALSE).}
 
 \item{test_method}{Statistical test to use: "t.test" or "wilcox.test" (default = "wilcox.test") (character).}
 

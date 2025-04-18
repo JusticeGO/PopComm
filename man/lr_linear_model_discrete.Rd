@@ -27,7 +27,7 @@ lr_linear_model_discrete(
 
 \item{covariates}{Optional list of covariate column names (character vector).}
 
-\item{fdr_threshold}{Significance cutoff for adjusted p-values (default: 0.05) (numeric).}
+\item{fdr_threshold}{Significance cutoff for adjusted p-values (numeric, default: 0.05).}
 }
 \value{
 Data frame with ligand, receptor, sender, receiver, coef (coefficient, logFC), p-values, and adjusted p-values.
@@ -45,4 +45,6 @@ result <- lr_linear_model_discrete(
   ident1 = "high",
   covariates = c("Age_group", "Sex")
 )
+
+head(result)
 }
