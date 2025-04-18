@@ -1,5 +1,5 @@
 Package: PopComm
-Title: Population-Level cell-Cell Communication Analysis Tools
+Title: Population-Level Cell-Cell Communication Analysis Tools
 Version: 0.1.0.0
 Authors@R: 
     c(person(given = "Zheng", family = "Gong", email = "gongzheng131@hotmail.com", role = c("aut", "cre"), 
