@@ -162,7 +162,7 @@ heatmap_sample <- function(lr_scores,
 #' data(metadata_eg)
 #' res <- pca_sample(lr_scores_eg, metadata_eg, selected_sender = "Cardiac",
 #'   selected_receiver = "Perivascular", color_by = "IFN_type")
-#' print(res$pca_plot)
+#' head(res$df)
 pca_sample <- function(lr_scores,
                        metadata,
                        selected_sender = NULL,
@@ -309,13 +309,13 @@ pca_sample <- function(lr_scores,
 #' # Boxplot of LR Score by group
 #' data(lr_scores_eg)
 #' data(metadata_eg)
-#' result <- boxplot_lr_group_comparison(
+#' res <- boxplot_lr_group_comparison(
 #'   lr_scores_eg, metadata_eg,
 #'   ligand = "TAC4", receptor = "TACR1",
 #'   sender = "Perivascular", receiver = "Cardiac",
-#'   group_by = "IFN_type"
+#'   group_by = "IFN_type", score = "normalized"
 #' )
-#' head(result$df)
+#' head(res$df)
 boxplot_lr_group_comparison <- function(lr_scores, metadata,
                                         ligand, receptor,
                                         sender, receiver,
@@ -451,13 +451,13 @@ boxplot_lr_group_comparison <- function(lr_scores, metadata,
 #' # Dotplot of LR Score Against Continuous Group Variable
 #' data(lr_scores_eg)
 #' data(metadata_eg)
-#' result <- dotplot_lr_continuous_group(
+#' res <- dotplot_lr_continuous_group(
 #'   lr_scores_eg, metadata_eg,
 #'   ligand = "TAC4", receptor = "TACR1",
 #'   sender = "Perivascular", receiver = "Cardiac",
 #'   group_by = "IFNscore"
 #' )
-#' head(result$df)
+#' head(res$df)
 dotplot_lr_continuous_group <- function(lr_scores, metadata,
                                         ligand, receptor,
                                         sender, receiver,
