@@ -42,12 +42,12 @@ across groups, handling both continuous and binary group variables (ident1 vs id
   data(lr_scores_eg)
   data(metadata_eg)
 
-  result <- lr_linear_model_discrete(
+  res <- lr_linear_model_discrete(
     lr_scores_eg, metadata_eg,
     group_variable = "IFN_type",
     ident1 = "high",
     covariates = c("Age_group", "Sex")
   )
-  head(result)
+  head(res)
 }
 }

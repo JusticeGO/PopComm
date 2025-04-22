@@ -59,11 +59,11 @@ with optional regression line.
 # Dotplot of LR Score Against Continuous Group Variable
 data(lr_scores_eg)
 data(metadata_eg)
-result <- dotplot_lr_continuous_group(
+res <- dotplot_lr_continuous_group(
   lr_scores_eg, metadata_eg,
   ligand = "TAC4", receptor = "TACR1",
   sender = "Perivascular", receiver = "Cardiac",
   group_by = "IFNscore"
 )
-head(result$df)
+head(res$df)
 }

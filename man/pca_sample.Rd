@@ -39,5 +39,5 @@ data(lr_scores_eg)
 data(metadata_eg)
 res <- pca_sample(lr_scores_eg, metadata_eg, selected_sender = "Cardiac",
   selected_receiver = "Perivascular", color_by = "IFN_type")
-print(res$pca_plot)
+head(res$df)
 }
