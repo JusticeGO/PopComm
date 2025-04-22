@@ -57,7 +57,8 @@ heatmap_sample <- function(lr_scores,
   heatmap_data <- lr_scores %>%
     group_by(.data[["LRSR"]], sample) %>%
     summarise(mean_score = mean(.data[[score_col]], na.rm = TRUE), .groups = "drop") %>%
-    pivot_wider(names_from = sample, values_from = mean_score, values_fill = list(mean_score = 0))
+    pivot_wider(names_from = sample, values_from = mean_score, values_fill = list(mean_score = NA))
+    # pivot_wider(names_from = sample, values_from = mean_score, values_fill = list(mean_score = 0))
 
   # Convert to matrix with LRSR as row names
   heatmap_matrix <- as.data.frame(heatmap_data)
