@@ -25,6 +25,10 @@ Full dataset available at \href{https://zenodo.org/}{Zenodo}
 \usage{
 load_example_seurat()
 }
+\value{
+A \code{\link[Seurat]{Seurat}} object containing example single-cell RNA-seq data.
+If the download fails, the function returns \code{NULL}.
+}
 \description{
 A preprocessed Seurat object containing single-cell RNA sequencing data for demonstration
 and testing purposes across functions in the PopComm package. The object includes normalized

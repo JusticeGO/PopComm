@@ -39,10 +39,15 @@
 #'   }
 #'   \item{reductions}{PCA and UMAP embeddings for visualization.}
 #' }
+#'
+#' @return A \code{\link[Seurat]{Seurat}} object containing example single-cell RNA-seq data.
+#' If the download fails, the function returns \code{NULL}.
+#'
 #' @source Subset of snRNA-seq data analyzed in our study,
 #' processed via standard workflow (see manuscript for details).
 #' Full dataset available at \href{https://zenodo.org/}{Zenodo}
 #' (DOI: 10.XXXX/zenodo.XXXXX).
+#'
 #' @keywords internal
 #' @export
 load_example_seurat <- function() {
