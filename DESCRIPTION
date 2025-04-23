@@ -14,7 +14,9 @@ Description: Facilitates population-level analysis of ligand-receptor (LR) inter
     between cell types. It provides a systematic framework for understanding cell-cell 
     communication, uncovering regulatory interactions and signaling mechanisms. 
     Offers tools for LR pair-level, sample-level, and differential interaction analyses, 
-    with comprehensive visualization support to aid biological interpretation.
+    with comprehensive visualization support to aid biological interpretation. 
+    The methodology is described in a manuscript currently under review and will be 
+    referenced here once published or publicly available.
 biocViews:
 Depends:
     R (>= 4.1.0)

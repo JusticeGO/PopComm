@@ -7,7 +7,7 @@
 #' @param sample_col Column name in Seurat metadata indicating sample identifiers (character).
 #'
 #' @return A data frame with unique metadata per sample.
-#'#'
+#'
 #' @importFrom dplyr %>% bind_rows
 #' @importFrom stats lm sd coef cor.test p.adjust
 #' @importFrom utils head
