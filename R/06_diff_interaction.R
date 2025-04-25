@@ -453,7 +453,6 @@ lr_linear_model_discrete <- function(lr_scores,
                   p_value = round(.data[["p_value"]], 15),
                   adjusted_p_value = round(.data[["adjusted_p_value"]], 15))
 
-
   return(result_df)
 }
 
