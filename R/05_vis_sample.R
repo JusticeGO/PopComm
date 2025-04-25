@@ -163,6 +163,8 @@ heatmap_sample <- function(lr_scores,
 #' data(metadata_eg)
 #' res <- pca_sample(lr_scores_eg, metadata_eg, selected_sender = "Cardiac",
 #'   selected_receiver = "Perivascular", color_by = "IFN_type")
+#'
+#' print(res$plot)
 #' head(res$df)
 pca_sample <- function(lr_scores,
                        metadata,
@@ -267,7 +269,6 @@ pca_sample <- function(lr_scores,
   }
 
   # Return a list containing the plot and the PCA results data frame
-  print(p)
   return(list(plot = p, df = pca_scores))
 }
 
@@ -316,6 +317,8 @@ pca_sample <- function(lr_scores,
 #'   sender = "Perivascular", receiver = "Cardiac",
 #'   group_by = "IFN_type", score = "normalized"
 #' )
+#'
+#' print(res$plot)
 #' head(res$df)
 boxplot_lr_group_comparison <- function(lr_scores, metadata,
                                         ligand, receptor,
@@ -409,7 +412,6 @@ boxplot_lr_group_comparison <- function(lr_scores, metadata,
     )
   }
 
-  print(p)
   return(list(plot = p, df = df))
 }
 
@@ -458,6 +460,8 @@ boxplot_lr_group_comparison <- function(lr_scores, metadata,
 #'   sender = "Perivascular", receiver = "Cardiac",
 #'   group_by = "IFNscore"
 #' )
+#'
+#' print(res$plot)
 #' head(res$df)
 dotplot_lr_continuous_group <- function(lr_scores, metadata,
                                         ligand, receptor,
@@ -563,7 +567,6 @@ dotplot_lr_continuous_group <- function(lr_scores, metadata,
         color = "black")
   }
 
-  print(p)
   return(list(plot = p, df = df))
 }
 

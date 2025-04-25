@@ -9,11 +9,11 @@
 #' @param rna A Seurat object containing single-cell RNA expression data.
 #' @param sender Cell type designated as the ligand sender (character).
 #' @param receiver Cell type designated as the receptor receiver (character).
-#' @param lr_database Data frame of LR pairs with columns "ligand_gene_symbol" and "receptor_gene_symbol".
-#' @param sample_col Column name in metadata indicating sample identifiers (character).
-#' @param cell_type_col Column name in metadata indicating cell type classifications (character).
+#' @param lr_database A data frame of ligand-receptor pairs with columns "ligand_gene_symbol" and "receptor_gene_symbol".
+#' @param sample_col Column name in Seurat metadata indicating sample identifiers (character).
+#' @param cell_type_col Column name in Seurat metadata indicating cell type classifications (character).
 #' @param min_cells Minimum cells required per sample for both sender and receiver (numeric, default 50).
-#' @param min_samples Minimum valid samples required of LR filter (numeric, default 10).
+#' @param min_samples Minimum valid samples required to proceed (numeric, default 10).
 #' @param min_cell_ratio Minimum ratio of cells expressing ligand and receptor genes in sender or receiver cells (numeric, default 0.1).
 #' @param min_sample_ratio Minimum ratio of samples in which both the ligand and receptor genes must be expressed (numeric, default 0.1).
 #' @param cor_method Correlation method: "spearman" (default), "pearson", or "kendall".
@@ -22,6 +22,7 @@
 #' @param min_adjust_p Adjusted p-value threshold for significance (numeric, default 0.05).
 #' @param min_cor Minimum correlation coefficient threshold (numeric, default 0). Must be \eqn{\ge}{>=} 0.
 #' @param num_cores Number of CPU cores for parallel processing (numeric, default 10). Automatically capped at (system cores - 1).
+#' @param verbose Logical indicating whether to print progress messages (logical, default: TRUE).
 #'
 #' @return Two data frames with columns:
 #'   \item{ligand, receptor}{Ligand and receptor gene symbols (res1/res2).}
@@ -34,14 +35,23 @@
 #'   \item{sample}{Sample identifier (res2).}
 #'   \item{score}{Projection score (raw co-expression intensity) (res2).}
 #'   \item{normalized_score}{Normalized score scaled between 0-1 (res2).}
-#'   Returns \code{NULL} if no valid pairs in either phase.
+#'
+#' Returns \code{NULL} if:
+#' \itemize{
+#'   \item No cell types are found in the metadata.
+#'   \item Insufficient samples or cells remain after filtering.
+#'   \item No ligand-receptor pairs pass the filtering thresholds.
+#'   \item One or both of the specified sender and receiver cell types are missing in the data.
+#'   \item Fewer than two valid samples remain after filtering based on minimum cell number per sample.
+#' }
 #'
 #' @export
 #'
 #' @importFrom dplyr %>% bind_rows
-#' @importFrom stats cor.test p.adjust lm sd coef na.omit
+#' @importFrom stats lm sd coef cor.test p.adjust na.omit
 #' @importFrom utils head packageVersion
 #' @importFrom Matrix rowSums
+#' @importFrom stringr str_match
 #'
 #' @examples
 #' \donttest{
@@ -60,11 +70,14 @@
 #'     min_cells = 20,
 #'     min_samples = 10,
 #'     min_adjust_p = 0.5,
-#'     num_cores = 1
+#'     num_cores = 1,
+#'     verbose = TRUE
 #'   )
 #'
-#'   head(res_single$res1)
-#'   head(res_single$res2)
+#'   if (!is.null(res_single)) {
+#'     print(head(res_single$res1))
+#'     print(head(res_single$res2))
+#'   }
 #' }
 one_step_single <- function(rna, sender, receiver, lr_database = PopComm::lr_db,
                             sample_col, cell_type_col,
@@ -72,15 +85,19 @@ one_step_single <- function(rna, sender, receiver, lr_database = PopComm::lr_db,
                             min_cell_ratio = 0.1, min_sample_ratio = 0.1,
                             cor_method = "spearman", adjust_method = "BH",
                             min_adjust_p = 0.05, min_cor = 0,
-                            num_cores = 10) {
+                            num_cores = 10, verbose = TRUE) {
 
-  message("One-step analysis of receptor-ligand interaction: ", sender, " -> ", receiver)
-
+  if (verbose) {
+    message("One-step analysis of receptor-ligand interaction: ", sender, " -> ", receiver)
+  }
   # Check parameters
   max_cores <- parallel::detectCores()
   if (num_cores > max_cores) {
-    message("Warning: Using more cores (", num_cores, ") than available (", max_cores, ").")
-    message("Using ", max_cores - 1, " cores instead of requested ", num_cores)
+    warning(
+      "Requested cores (", num_cores, ") exceed available (", max_cores, "). ",
+      "Using ", max_cores - 1, " cores.",
+      immediate. = TRUE
+    )
     num_cores <- max_cores - 1
   }
 
@@ -88,7 +105,9 @@ one_step_single <- function(rna, sender, receiver, lr_database = PopComm::lr_db,
   rna$sample <- rna@meta.data[, sample_col]
   rna$cell.type <- rna@meta.data[, cell_type_col]
   cell_types <- unique(rna@meta.data[[cell_type_col]])
-  if (length(cell_types) < 1) stop("No cell types found.")
+  if (length(cell_types) < 1) {
+    stop("No cell types found in column '", cell_type_col, "'.", call. = FALSE)
+  }
 
   selected_types <- unique(c(sender, receiver))
   missing_types <- setdiff(selected_types, cell_types)
@@ -98,7 +117,9 @@ one_step_single <- function(rna, sender, receiver, lr_database = PopComm::lr_db,
 
   # Determine the subset of data
   if (!setequal(selected_types, cell_types)) {
-    message("Subsetting ", sender, " (sender) and ", receiver, " (receiver)...")
+    if (verbose) {
+      message("Subsetting ", sender, " (sender) and ", receiver, " (receiver)...")
+    }
     cells.to.keep <- rna$cell.type %in% selected_types
     rna.data <- rna[, cells.to.keep]
   } else {
@@ -106,11 +127,15 @@ one_step_single <- function(rna, sender, receiver, lr_database = PopComm::lr_db,
   }
 
   # Step 1: 01_filter_interaction
-  message("\nStep 1: Filter interaction")
-  message("Analyzing ligand-receptor interactions: ", sender, " -> ", receiver)
+  if (verbose) {
+    message("\nStep 1: Filter interaction")
+    message("Analyzing ligand-receptor interactions: ", sender, " -> ", receiver)
+  }
 
   # Filter samples based on cell counts per sample
-  message("Filtering samples with cell counts...")
+  if (verbose) {
+    message("Filtering samples with cell counts...")
+  }
   cell_counts <- table(rna.data$sample, rna.data$cell.type)
   if (sender != receiver) {
     valid_samples <- names(which(
@@ -122,15 +147,24 @@ one_step_single <- function(rna, sender, receiver, lr_database = PopComm::lr_db,
       cell_counts[, sender] > min_cells
       ))
   }
-  message("Remaining samples after filtering: ", length(valid_samples))
+  if (verbose) {
+    message("Remaining samples after filtering: ", length(valid_samples))
+  }
   if (length(valid_samples) < min_samples) {
-    message("Insufficient valid samples (", length(valid_samples), " < ", min_samples, "). Analysis stopped.")
+    warning(
+      sender, " -> ", receiver, ": insufficient valid samples (", length(valid_samples), " < ", min_samples, ").\n",
+      "Check: min_cells (current=", min_cells, ") or sample collection.",
+      immediate. = TRUE
+    )
     return(NULL)
   }
+
   rna.data <- subset(rna.data, sample %in% valid_samples)
 
   # Filter LR pairs based on minimum cell ratio
-  message("Filtering LR pairs based on minimum cell ratio in sender or receiver cells...")
+  if (verbose) {
+    message("Filtering LR pairs based on minimum cell ratio in sender or receiver cells...")
+  }
   lr <- lr_database
   lr <- lr[which(lr$ligand_gene_symbol %in% rownames(rna.data)), ]
   lr <- lr[which(lr$receptor_gene_symbol %in% rownames(rna.data)), ]
@@ -155,22 +189,26 @@ one_step_single <- function(rna, sender, receiver, lr_database = PopComm::lr_db,
 
   # Compute average expression for each sample-cell type group
   rna.data$group <- paste0(rna.data$sample, "-lr-", rna.data$cell.type)
-  message("Computing average expression for each sample-cell type group...")
+  if (verbose) {
+    message("Computing average expression for each sample-cell type group...")
+  }
   rna.avg <- Seurat::AverageExpression(rna.data, group.by = "group")[[1]]   # seurat v4/v5
   rna.avg <- round(rna.avg, 5)
 
   avg.s <- rna.avg[, grep(sender, colnames(rna.avg))]
   avg.r <- rna.avg[, grep(receiver, colnames(rna.avg))]
 
-  colnames(avg.s) <- stringr::str_match(colnames(avg.s), "^(.*)-lr-")[,2]
-  colnames(avg.r) <- stringr::str_match(colnames(avg.r), "^(.*)-lr-")[,2]
+  colnames(avg.s) <- str_match(colnames(avg.s), "^(.*)-lr-")[,2]
+  colnames(avg.r) <- str_match(colnames(avg.r), "^(.*)-lr-")[,2]
 
   avg.r <- avg.r[, colnames(avg.s), drop = FALSE]
 
   avg.s <- avg.s[lr$ligand_gene_symbol, , drop = FALSE]
   avg.r <- avg.r[lr$receptor_gene_symbol, , drop = FALSE]
 
-  message("Starting correlation and filtering process for ligand-receptor pairs...")
+  if (verbose) {
+    message("Starting correlation and filtering process for ligand-receptor pairs...")
+  }
 
   # Calculate correlation and linear models
   calc_correlation <- function(i) {
@@ -178,8 +216,6 @@ one_step_single <- function(rna, sender, receiver, lr_database = PopComm::lr_db,
     y <- as.numeric(avg.r[lr$receptor_gene_symbol[i], ])
 
     # filter sample
-    # data_df <- data.frame(x = x, y = y)
-    # data_df <- remove_outlier(data_df)
     data_df <- data.frame(x = x, y = y) |> remove_outlier() |> na.omit()
     p <- data_df$x
     q <- data_df$y
@@ -230,7 +266,10 @@ one_step_single <- function(rna, sender, receiver, lr_database = PopComm::lr_db,
   res_mat <- do.call(rbind, Filter(Negate(is.null), res_list))
 
   if (is.null(res_mat)) {
-    message("No valid ligand-receptor pairs passed the initial filtering.")
+    warning(
+      sender, " -> ", receiver, ":no ligand-receptor pairs survived initial filtering.",
+      immediate. = TRUE
+    )
     return(NULL)
   }
   res <- data.frame(res_mat, stringsAsFactors = FALSE)
@@ -242,38 +281,39 @@ one_step_single <- function(rna, sender, receiver, lr_database = PopComm::lr_db,
   res$adjust.p <- round(p.adjust(res$p_val, method = adjust_method), 15)
 
   # Filter the results based on adjusted p-value, correlation, and ratio thresholds
-  message("Filtering results based on adjusted p-value, correlation, and ratio thresholds...")
+  if (verbose) {
+    message("Filtering results based on adjusted p-value, correlation, and ratio thresholds...")
+  }
   res <- res[which(res$adjust.p < min_adjust_p &
                      res$cor > min_cor &
                      res$pct1 > min_sample_ratio &
                      res$pct2 > min_sample_ratio), ]
   res <- res[order(res$adjust.p, -res$cor), ]
-  if (nrow(res) > 0) {
-    row.names(res) <- 1:nrow(res)
-  }
 
   if (nrow(res) == 0) {
-    message("No results meet the filtering criteria. Returning NULL.")
+    message(sender, " -> ", receiver, ": no significant LR pairs found.")
     return(NULL)
   }
 
+  row.names(res) <- 1:nrow(res)
   res$sender <- sender
   res$receiver <- receiver
-
-  res$ligand <- stringr::str_match(res$lr, "^(.*)_")[,2]
-  res$receptor <- stringr::str_match(res$lr, "_(.*)$")[,2]
+  res$ligand <- str_match(res$lr, "^(.*)_")[,2]
+  res$receptor <- str_match(res$lr, "_(.*)$")[,2]
 
   selected_cols <- c("ligand", "receptor", "cor", "p_val", "adjust.p", "sender", "receiver", "slope", "intercept")
   res <- res %>% select(all_of(selected_cols))
 
-  message("Filter and correlation process complete.")
-  message("Head of results (", nrow(res), "):")
-  print(head(res))
+  if (verbose) {
+    message("Filtered LR analysis complete. Identified ", nrow(res), " significant ligand-receptor pairs.")
+  }
 
 
   # Step 2: 02_score_sample
-  message("\nStep 2: Calculate the Projection Score")
-  message("Analyzing ligand-receptor projection scores: ", sender, " -> ", receiver)
+  if (verbose) {
+    message("\nStep 2: Calculate the Projection Score")
+    message("Analyzing ligand-receptor projection scores: ", sender, " -> ", receiver)
+  }
 
   # Compute average expression for each sample-cell type group
   avg.s_sub <- avg.s[res$ligand, , drop = FALSE]
@@ -324,15 +364,13 @@ one_step_single <- function(rna, sender, receiver, lr_database = PopComm::lr_db,
   score_list <- score_list[sapply(score_list, function(x) nrow(x) > 0)]
   score.df <- bind_rows(score_list) %>% na.omit()
 
-  message("Analyzing ligand-receptor projection scores process complete.")
-  message("Head of projection score results (", nrow(score.df), "):")
-  print(head(score.df))
-
-  message("\n", sender, " -> ", receiver, " analyzing process complete.\n")
+  if (verbose) {
+    message("LR projection score analysis complete. Identified ", nrow(score.df), " significant ligand-receptor pairs.")
+    message("\n", sender, " -> ", receiver, " analyzing process complete.\n")
+  }
 
   return(list(res1 = res, res2 = score.df))
 }
-
 
 
 
@@ -345,11 +383,11 @@ one_step_single <- function(rna, sender, receiver, lr_database = PopComm::lr_db,
 #' Returns comprehensive results combining statistical metrics.
 #'
 #' @param rna A Seurat object containing single-cell RNA expression data.
-#' @param lr_database Data frame of LR pairs with columns "ligand_gene_symbol" and "receptor_gene_symbol".
-#' @param sample_col Column name in metadata indicating sample identifiers (character).
-#' @param cell_type_col Column name in metadata indicating cell type classifications (character).
+#' @param lr_database A data frame of ligand-receptor pairs with columns "ligand_gene_symbol" and "receptor_gene_symbol".
+#' @param sample_col Column name in Seurat metadata indicating sample identifiers (character).
+#' @param cell_type_col Column name in Seurat metadata indicating cell type classifications (character).
 #' @param min_cells Minimum cells required per sample for both sender and receiver (numeric, default 50).
-#' @param min_samples Minimum valid samples required for LR filter (numeric, default 10).
+#' @param min_samples Minimum valid samples required to proceed (numeric, default 10).
 #' @param min_cell_ratio Minimum ratio of cells expressing ligand and receptor genes in sender or receiver cells (numeric, default 0.1).
 #' @param min_sample_ratio Minimum ratio of samples in which both the ligand and receptor genes must be expressed (numeric, default 0.1).
 #' @param cor_method Correlation method: "spearman" (default), "pearson", or "kendall".
@@ -358,6 +396,7 @@ one_step_single <- function(rna, sender, receiver, lr_database = PopComm::lr_db,
 #' @param min_adjust_p Adjusted p-value threshold for significance (numeric, default 0.05).
 #' @param min_cor Minimum correlation coefficient threshold (numeric, default 0). Must be \eqn{\ge}{>=} 0.
 #' @param num_cores Number of CPU cores for parallel processing (numeric, default 10). Automatically capped at (system cores - 1).
+#' @param verbose Logical indicating whether to print progress messages (logical, default: TRUE).
 #'
 #' @return Two data frames with columns:
 #'   \item{ligand, receptor}{Ligand and receptor gene symbols (res1/res2).}
@@ -370,12 +409,20 @@ one_step_single <- function(rna, sender, receiver, lr_database = PopComm::lr_db,
 #'   \item{sample}{Sample identifier (res2).}
 #'   \item{score}{Projection score (raw co-expression intensity) (res2).}
 #'   \item{normalized_score}{Normalized score scaled between 0-1 (res2).}
-#'   Returns \code{NULL} if no valid pairs in either phase.
+#'
+#' Returns \code{NULL} if:
+#' \itemize{
+#'   \item No cell types are found in the metadata.
+#'   \item Insufficient samples or cells remain after filtering.
+#'   \item No ligand-receptor pairs pass the filtering thresholds.
+#'   \item One or both of the specified sender and receiver cell types are missing in the data.
+#'   \item Fewer than two valid samples remain after filtering based on minimum cell number per sample.
+#' }
 #'
 #' @export
 #'
 #' @importFrom dplyr %>% bind_rows
-#' @importFrom stats cor.test p.adjust lm sd coef na.omit
+#' @importFrom stats lm sd coef cor.test p.adjust na.omit
 #' @importFrom utils head
 #' @importFrom Matrix rowSums
 #'
@@ -394,11 +441,14 @@ one_step_single <- function(rna, sender, receiver, lr_database = PopComm::lr_db,
 #'     min_cells = 20,
 #'     min_samples = 10,
 #'     min_adjust_p = 0.5,
-#'     num_cores = 1
+#'     num_cores = 1,
+#'     verbose = TRUE
 #'   )
 #'
-#'   head(res_all$res1)
-#'   head(res_all$res2)
+#'   if (!is.null(res_all)) {
+#'     print(head(res_all$res1))
+#'     print(head(res_all$res2))
+#'   }
 #' }
 one_step_all <- function(rna, lr_database,
                          sample_col, cell_type_col,
@@ -406,15 +456,19 @@ one_step_all <- function(rna, lr_database,
                          min_cell_ratio = 0.1, min_sample_ratio = 0.1,
                          cor_method = "spearman", adjust_method = "BH",
                          min_adjust_p = 0.05, min_cor = 0,
-                         num_cores = 10) {
+                         num_cores = 10, verbose = TRUE) {
 
-  message("\nOne-step analysis of receptor-ligand interaction: For all possible cell type pairs")
-
+  if (verbose) {
+    message("\nOne-step analysis of receptor-ligand interaction: For all possible cell type pairs")
+  }
   # Check parameters
   max_cores <- parallel::detectCores()
   if (num_cores > max_cores) {
-    message("Warning: Using more cores (", num_cores, ") than available (", max_cores, ").")
-    message("Using ", max_cores - 1, " cores instead of requested ", num_cores)
+    warning(
+      "Requested cores (", num_cores, ") exceed available (", max_cores, "). ",
+      "Using ", max_cores - 1, " cores.",
+      immediate. = TRUE
+    )
     num_cores <- max_cores - 1
   }
 
@@ -422,8 +476,13 @@ one_step_all <- function(rna, lr_database,
   rna$sample <- rna@meta.data[, sample_col]
   rna$cell.type <- rna@meta.data[, cell_type_col]
   cell_types <- unique(rna@meta.data[[cell_type_col]])
-  if (length(cell_types) < 1) stop("No cell types found.")
-  message("Cell types: ", paste(cell_types, collapse = ", "))
+  if (length(cell_types) < 1) {
+    stop("No cell types found in column '", cell_type_col, "'.", call. = FALSE)
+  }
+
+  if (verbose) {
+    message("Cell types: ", paste(cell_types, collapse = ", "))
+  }
 
   run_one_step <- function(rna_obj, sender, receiver) {
     res <- one_step_single(
@@ -441,7 +500,8 @@ one_step_all <- function(rna, lr_database,
       min_cor = min_cor,
       min_sample_ratio = min_sample_ratio,
       min_cell_ratio = min_cell_ratio,
-      num_cores = num_cores
+      num_cores = num_cores,
+      verbose = verbose
     )
     if (!is.null(res) && is.list(res) && !is.null(res$res1) && nrow(res$res1) > 0) {
       return(res)
@@ -450,28 +510,38 @@ one_step_all <- function(rna, lr_database,
   }
 
   # Handles pairing of the same cell type
-  message("\nProcessing same cell type pairs...")
+  if (verbose) {
+    message("\nProcessing same cell type pairs...")
+  }
   same_ct_results <- lapply(cell_types, function(ct) {
-    message("\n  Analyzing pair: ", ct, " <-> ", ct)
+    if (verbose) {
+      message("\n  Analyzing pair: ", ct, " <-> ", ct)
+    }
     run_one_step(rna, sender = ct, receiver = ct)
   })
   same_ct_results <- Filter(Negate(is.null), same_ct_results)
 
   # Processing the pairing of different cell types
-  message("\nProcessing different cell type pairs...")
+  if (verbose) {
+    message("\nProcessing different cell type pairs...")
+  }
   diff_ct_results <- list()
   unique_pairs <- combn(cell_types, 2, simplify = FALSE)
 
   for (pair in unique_pairs) {
     ct1 <- pair[1]
     ct2 <- pair[2]
-    message("\n  Analyzing pair: ", ct1, " <-> ", ct2)
+    if (verbose) {
+      message("\n  Analyzing pair: ", ct1, " <-> ", ct2)
+    }
 
     # subset data
     cells_to_keep <- rna$cell.type %in% c(ct1, ct2)
     rna_subset <- rna[, cells_to_keep]
     if (length(unique(rna_subset$cell.type)) < 2) {
-      message("  Skipping pair ", ct1, " and ", ct2, " due to insufficient cell types.")
+      if (verbose) {
+        message("  Skipping pair ", ct1, " and ", ct2, " due to insufficient cell types.")
+      }
       next
     }
 
@@ -507,16 +577,14 @@ one_step_all <- function(rna, lr_database,
 
   # Check that the result is not empty
   if (nrow(final_res$res1) == 0 && nrow(final_res$res2) == 0) {
-    message("\nNo results meet the filtering criteria. Returning NULL.")
+    if (verbose) {
+      message("\nNo significant ligand-receptor pairs were identified.")
+    }
     return(NULL)
   }
 
-  message("\nFor all possible cell type pairs analyzing process is complete.")
-  message("Head of filter and correlation results (", nrow(final_res$res1), "):")
-  print(head(final_res$res1))
-
-  message("Head of LR projection scores results (", nrow(final_res$res2), "):")
-  print(head(final_res$res2))
-
+  if (verbose) {
+    message("\n\nFor all possible cell type pairs analyzing process is complete.")
+  }
   return(final_res)
 }

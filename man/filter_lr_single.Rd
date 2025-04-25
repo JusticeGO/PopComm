@@ -19,7 +19,8 @@ filter_lr_single(
   adjust_method = "BH",
   min_adjust_p = 0.05,
   min_cor = 0,
-  num_cores = 10
+  num_cores = 10,
+  verbose = TRUE
 )
 }
 \arguments{
@@ -53,9 +54,11 @@ Options: "holm", "hochberg", "hommel", "bonferroni", "BH", "BY", "fdr", "none".}
 \item{min_cor}{Minimum correlation coefficient threshold (numeric, default 0). Must be \eqn{\ge}{>=} 0.}
 
 \item{num_cores}{Number of CPU cores for parallel processing (numeric, default 10). Automatically capped at (system cores - 1).}
+
+\item{verbose}{Logical indicating whether to print progress messages (logical, default: TRUE).}
 }
 \value{
-A data frame of filtered LR pairs with columns:
+A data frame includes LR pairs with sufficient correlation and expression support across samples.
 \item{ligand, receptor}{Ligand and receptor gene symbols.}
 \item{cor}{Correlation coefficient.}
 \item{p_val}{Raw p-value.}
@@ -63,12 +66,18 @@ A data frame of filtered LR pairs with columns:
 \item{sender, receiver}{Sender and receiver cell types.}
 \item{slope}{Slope of the linear regression model.}
 \item{intercept}{Intercept of the linear regression model.}
-Rows ordered by ascending \code{adjust.p} and descending \code{cor}.
-Returns \code{NULL} if no pairs pass filters.
+Rows are ordered by ascending \code{adjust.p} and descending \code{cor}.
+
+Returns \code{NULL} if:
+\itemize{
+\item No cell types are found in the metadata.
+\item Insufficient samples or cells remain after filtering.
+\item No ligand-receptor pairs pass the filtering thresholds.
+}
 }
 \description{
 Filters ligand-receptor (LR) pairs and analyzes their correlations for specified sender and receiver cell types,
-and returning significant LR pairs based on user-defined thresholds.
+and returns significant LR pairs based on user-defined thresholds.
 }
 \examples{
 \donttest{
@@ -87,7 +96,12 @@ and returning significant LR pairs based on user-defined thresholds.
     min_cells = 20,
     min_samples = 10,
     min_adjust_p = 0.5,
-    num_cores = 1
+    num_cores = 1,
+    verbose = TRUE
   )
+
+  if (!is.null(result01s)) {
+  print(head(result01s))
+  }
 }
 }

@@ -12,7 +12,8 @@ score_lr_single(
   sample_col,
   cell_type_col,
   min_cells = 50,
-  num_cores = 10
+  num_cores = 10,
+  verbose = TRUE
 )
 }
 \arguments{
@@ -32,6 +33,8 @@ Must contain an "lr" column with pair identifiers in "Ligand_Receptor" format.}
 \item{min_cells}{Minimum cells required per sample for both sender and receiver (numeric, default 50).}
 
 \item{num_cores}{Number of CPU cores for parallel processing (numeric, default 10). Automatically capped at (system cores - 1).}
+
+\item{verbose}{Logical indicating whether to print progress messages (logical, default: TRUE).}
 }
 \value{
 A data frame with projection scores per sample and LR pair. Columns:
@@ -39,8 +42,14 @@ A data frame with projection scores per sample and LR pair. Columns:
 \item{sample}{Sample identifier.}
 \item{score}{Projection score (raw co-expression intensity).}
 \item{normalized_score}{Normalized score scaled between 0-1.}
-Rows ordered by \code{filtered_lr} columns and descending \code{score}.
-Returns \code{NULL} if no valid pairs.
+Rows are ordered by \code{filtered_lr} columns and descending \code{score}.
+
+Returns \code{NULL} if:
+\itemize{
+\item No cell types are found in the metadata.
+\item One or both of the specified sender and receiver cell types are missing in the data.
+\item Fewer than two valid samples remain after filtering based on minimum cell number per sample.
+}
 }
 \description{
 This function calculates the projection scores for ligand-receptor (LR) pairs
@@ -65,7 +74,8 @@ LR expression from the origin of the regression line.
     min_cells = 20,
     min_samples = 10,
     min_adjust_p = 0.5,
-    num_cores = 1
+    num_cores = 1,
+    verbose = TRUE
   )
 
   # Analyzing ligand-receptor projection scores: Cardiac -> Perivascular
@@ -77,7 +87,12 @@ LR expression from the origin of the regression line.
     sample_col = "sample",
     cell_type_col = "cell.type",
     min_cells = 20,
-    num_cores = 1
+    num_cores = 1,
+    verbose = TRUE
   )
+
+  if (!is.null(result02s)) {
+  print(head(result02s))
+  }
 }
 }

@@ -65,5 +65,7 @@ res <- dotplot_lr_continuous_group(
   sender = "Perivascular", receiver = "Cardiac",
   group_by = "IFNscore"
 )
+
+print(res$plot)
 head(res$df)
 }

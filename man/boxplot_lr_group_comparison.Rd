@@ -68,5 +68,7 @@ res <- boxplot_lr_group_comparison(
   sender = "Perivascular", receiver = "Cardiac",
   group_by = "IFN_type", score = "normalized"
 )
+
+print(res$plot)
 head(res$df)
 }

@@ -19,7 +19,8 @@ one_step_single(
   adjust_method = "BH",
   min_adjust_p = 0.05,
   min_cor = 0,
-  num_cores = 10
+  num_cores = 10,
+  verbose = TRUE
 )
 }
 \arguments{
@@ -29,15 +30,15 @@ one_step_single(
 
 \item{receiver}{Cell type designated as the receptor receiver (character).}
 
-\item{lr_database}{Data frame of LR pairs with columns "ligand_gene_symbol" and "receptor_gene_symbol".}
+\item{lr_database}{A data frame of ligand-receptor pairs with columns "ligand_gene_symbol" and "receptor_gene_symbol".}
 
-\item{sample_col}{Column name in metadata indicating sample identifiers (character).}
+\item{sample_col}{Column name in Seurat metadata indicating sample identifiers (character).}
 
-\item{cell_type_col}{Column name in metadata indicating cell type classifications (character).}
+\item{cell_type_col}{Column name in Seurat metadata indicating cell type classifications (character).}
 
 \item{min_cells}{Minimum cells required per sample for both sender and receiver (numeric, default 50).}
 
-\item{min_samples}{Minimum valid samples required of LR filter (numeric, default 10).}
+\item{min_samples}{Minimum valid samples required to proceed (numeric, default 10).}
 
 \item{min_cell_ratio}{Minimum ratio of cells expressing ligand and receptor genes in sender or receiver cells (numeric, default 0.1).}
 
@@ -53,6 +54,8 @@ Options: "holm", "hochberg", "hommel", "bonferroni", "BH", "BY", "fdr", "none".}
 \item{min_cor}{Minimum correlation coefficient threshold (numeric, default 0). Must be \eqn{\ge}{>=} 0.}
 
 \item{num_cores}{Number of CPU cores for parallel processing (numeric, default 10). Automatically capped at (system cores - 1).}
+
+\item{verbose}{Logical indicating whether to print progress messages (logical, default: TRUE).}
 }
 \value{
 Two data frames with columns:
@@ -66,7 +69,15 @@ Two data frames with columns:
 \item{sample}{Sample identifier (res2).}
 \item{score}{Projection score (raw co-expression intensity) (res2).}
 \item{normalized_score}{Normalized score scaled between 0-1 (res2).}
-Returns \code{NULL} if no valid pairs in either phase.
+
+Returns \code{NULL} if:
+\itemize{
+\item No cell types are found in the metadata.
+\item Insufficient samples or cells remain after filtering.
+\item No ligand-receptor pairs pass the filtering thresholds.
+\item One or both of the specified sender and receiver cell types are missing in the data.
+\item Fewer than two valid samples remain after filtering based on minimum cell number per sample.
+}
 }
 \description{
 Performs integrated analysis of ligand-receptor (LR) pairs through two consecutive phases:
@@ -93,10 +104,13 @@ Returns comprehensive results combining statistical metrics.
     min_cells = 20,
     min_samples = 10,
     min_adjust_p = 0.5,
-    num_cores = 1
+    num_cores = 1,
+    verbose = TRUE
   )
 
-  head(res_single$res1)
-  head(res_single$res2)
+  if (!is.null(res_single)) {
+    print(head(res_single$res1))
+    print(head(res_single$res2))
+  }
 }
 }
