@@ -455,4 +455,3 @@ lr_linear_model_discrete <- function(lr_scores,
 
   return(result_df)
 }
-

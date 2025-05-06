@@ -494,4 +494,3 @@ filter_lr_all <- function(rna, lr_database = PopComm::lr_db,
 
   return(final_res)
 }
-

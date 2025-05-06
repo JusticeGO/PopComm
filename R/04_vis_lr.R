@@ -119,16 +119,6 @@ circle_plot <- function(filtered_lr,
     margin_value <- 0  # No extra margin when no self-interactions
   }
 
-  # font_family <- if (.Platform$OS.type == "windows") {
-  #   "sans"
-  # } else {
-  #   if ("Arial" %in% names(grDevices::postscriptFonts())) {
-  #     "Arial"
-  #   } else {
-  #     "sans"
-  #   }
-  # }
-
   plot(g,
        layout = layout,
        edge.arrow.size = 0.6,
@@ -150,6 +140,7 @@ circle_plot <- function(filtered_lr,
   p <- grDevices::recordPlot()
   return(p)
 }
+
 
 
 #' Create Ligand-Receptor Interaction Dot Plot

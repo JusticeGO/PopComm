@@ -232,7 +232,6 @@ score_lr_single <- function(rna, sender, receiver, filtered_lr,
 
 
 
-
 #' Analyze Ligand-Receptor Projection Scores (Across All Cell Types)
 #'
 #' @description

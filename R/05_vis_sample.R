@@ -569,5 +569,3 @@ dotplot_lr_continuous_group <- function(lr_scores, metadata,
 
   return(list(plot = p, df = df))
 }
-
-
