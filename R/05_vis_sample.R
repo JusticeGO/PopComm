@@ -235,15 +235,14 @@ pca_sample <- function(lr_scores,
       geom_point(size = 3) +
       labs(x = "Principal Component 1", y = "Principal Component 2",
            title = "PCA of Ligand-Receptor Interaction Scores", color = color_by) +
-      theme_minimal() +
+      theme_bw() +
       theme(
-        axis.text.x = element_text(color = "black"),
-        axis.text.y = element_text(color = "black"),
+        axis.text = element_text(color = "black"),
         plot.title = element_text(size = 12, hjust = 0.5, color = "black"),
         legend.position = "right",
-        axis.line = element_line(),
-        axis.ticks = element_line(),
-        panel.border = element_rect(color = "black", fill = NA),
+        # axis.line = element_line(),
+        # axis.ticks = element_line(),
+        # panel.border = element_rect(color = "black", fill = NA),
         panel.grid.major = element_blank(),
         panel.grid.minor = element_blank()
       ) +
@@ -255,14 +254,13 @@ pca_sample <- function(lr_scores,
       geom_point(size = 3, color = "black") +
       labs(x = "Principal Component 1", y = "Principal Component 2",
            title = "PCA of Ligand-Receptor Interaction Scores") +
-      theme_minimal() +
+      theme_bw() +
       theme(
-        axis.text.x = element_text(color = "black"),
-        axis.text.y = element_text(color = "black"),
+        axis.text = element_text(color = "black"),
         plot.title = element_text(size = 12, hjust = 0.5, color = "black"),
-        axis.line = element_line(),
-        axis.ticks = element_line(),
-        panel.border = element_rect(color = "black", fill = NA),
+        # axis.line = element_line(),
+        # axis.ticks = element_line(),
+        # panel.border = element_rect(color = "black", fill = NA),
         panel.grid.major = element_blank(),
         panel.grid.minor = element_blank()
       )
