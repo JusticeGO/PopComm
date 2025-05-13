@@ -10,7 +10,9 @@ heatmap_sample(
   score = c("normalized", "raw"),
   selected_sender = NULL,
   selected_receiver = NULL,
-  selected_metadata = NULL
+  selected_metadata = NULL,
+  treeheight_row = 50,
+  treeheight_col = 50
 )
 }
 \arguments{
@@ -25,6 +27,10 @@ heatmap_sample(
 \item{selected_receiver}{Specific receiver cell type to filter, default is None (use all) (character).}
 
 \item{selected_metadata}{List of column names in \code{metadata} to annotate samples (default: None, use all)(character vector).}
+
+\item{treeheight_row}{The height of a tree for rows (numeric, default: 50).}
+
+\item{treeheight_col}{The height of a tree for columns (numeric, default: 50).}
 }
 \value{
 Heatmap of average LR interaction scores per sample.

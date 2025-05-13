@@ -10,6 +10,8 @@
 #' @param selected_sender Specific sender cell type to filter, default is None (use all) (character).
 #' @param selected_receiver Specific receiver cell type to filter, default is None (use all) (character).
 #' @param selected_metadata List of column names in \code{metadata} to annotate samples (default: None, use all)(character vector).
+#' @param treeheight_row The height of a tree for rows (numeric, default: 50).
+#' @param treeheight_col The height of a tree for columns (numeric, default: 50).
 #'
 #' @return Heatmap of average LR interaction scores per sample.
 #'
@@ -36,7 +38,9 @@ heatmap_sample <- function(lr_scores,
                            score = c("normalized", "raw"),
                            selected_sender = NULL,
                            selected_receiver = NULL,
-                           selected_metadata = NULL) {
+                           selected_metadata = NULL,
+                           treeheight_row = 50,
+                           treeheight_col = 50) {
 
   # Parameter validation
   score <- match.arg(score)
@@ -122,6 +126,8 @@ heatmap_sample <- function(lr_scores,
                  color = colorRampPalette(rev(brewer.pal(n = 7, name = "RdYlBu")))(100),
                  annotation_col = annotation_col,
                  annotation_colors = auto_annotation_colors,
+                 treeheight_row	= treeheight_row,
+                 treeheight_col = treeheight_col,
                  cluster_rows = TRUE,
                  cluster_cols = TRUE,
                  show_rownames = FALSE,
