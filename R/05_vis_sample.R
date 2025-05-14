@@ -273,6 +273,7 @@ pca_sample <- function(lr_scores,
   }
 
   # Return a list containing the plot and the PCA results data frame
+  colnames(pca_scores)[colnames(pca_scores) == "sample"] <- "Sample"
   return(list(plot = p, df = pca_scores))
 }
 
@@ -416,6 +417,7 @@ boxplot_lr_group_comparison <- function(lr_scores, metadata,
     )
   }
 
+  colnames(df)[colnames(df) == "sample"] <- "Sample"
   return(list(plot = p, df = df))
 }
 
@@ -571,5 +573,6 @@ dotplot_lr_continuous_group <- function(lr_scores, metadata,
         color = "black")
   }
 
+  colnames(df)[colnames(df) == "sample"] <- "Sample"
   return(list(plot = p, df = df))
 }
