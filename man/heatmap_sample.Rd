@@ -12,7 +12,9 @@ heatmap_sample(
   selected_receiver = NULL,
   selected_metadata = NULL,
   treeheight_row = 50,
-  treeheight_col = 50
+  treeheight_col = 50,
+  show_rownames = FALSE,
+  show_colnames = FALSE
 )
 }
 \arguments{
@@ -31,9 +33,13 @@ heatmap_sample(
 \item{treeheight_row}{The height of a tree for rows (numeric, default: 50).}
 
 \item{treeheight_col}{The height of a tree for columns (numeric, default: 50).}
+
+\item{show_rownames}{Whether to display ligand-receptor names on rows (logical, default: FALSE).}
+
+\item{show_colnames}{Whether to display sample names on columns (logical, default: FALSE).}
 }
 \value{
-Heatmap of average LR interaction scores per sample.
+A pheatmap object.
 }
 \description{
 This function generates a heatmap to visualize the ligand-receptor (LR) interaction scores across samples.

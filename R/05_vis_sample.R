@@ -12,12 +12,14 @@
 #' @param selected_metadata List of column names in \code{metadata} to annotate samples (default: None, use all)(character vector).
 #' @param treeheight_row The height of a tree for rows (numeric, default: 50).
 #' @param treeheight_col The height of a tree for columns (numeric, default: 50).
+#' @param show_rownames Whether to display ligand-receptor names on rows (logical, default: FALSE).
+#' @param show_colnames Whether to display sample names on columns (logical, default: FALSE).
 #'
-#' @return Heatmap of average LR interaction scores per sample.
+#' @return A pheatmap object.
 #'
 #' @export
 #'
-#' @importFrom dplyr %>% filter mutate group_by summarise
+#' @importFrom dplyr %>% filter mutate group_by summarise distinct
 #' @importFrom tidyr pivot_wider
 #' @importFrom pheatmap pheatmap
 #' @importFrom RColorBrewer brewer.pal
@@ -40,36 +42,42 @@ heatmap_sample <- function(lr_scores,
                            selected_receiver = NULL,
                            selected_metadata = NULL,
                            treeheight_row = 50,
-                           treeheight_col = 50) {
+                           treeheight_col = 50,
+                           show_rownames = FALSE,
+                           show_colnames = FALSE) {
 
   # Parameter validation
   score <- match.arg(score)
   score_col <- ifelse(score == "normalized", "normalized_score", "score")
 
   if (!is.null(selected_sender)) {
-    lr_scores <- lr_scores %>% filter(.data[["sender"]] == selected_sender)
+    lr_scores <- lr_scores %>% filter(.data[["sender"]] %in% selected_sender)
   }
   if (!is.null(selected_receiver)) {
-    lr_scores <- lr_scores %>% filter(.data[["receiver"]] == selected_receiver)
+    lr_scores <- lr_scores %>% filter(.data[["receiver"]] %in% selected_receiver)
   }
 
-  # Create a new identifier by concatenating ligand, receptor, sender, and receiver
+  # Create LRSR key
   lr_scores <- lr_scores %>%
-    mutate(LRSR = paste(.data[["ligand"]], .data[["receptor"]], .data[["sender"]], .data[["receiver"]], sep = "_"))
+    mutate(
+      LRSR = paste(.data[["ligand"]], .data[["receptor"]], .data[["sender"]], .data[["receiver"]], sep = "_"),
+      LR = paste(.data[["ligand"]], .data[["receptor"]], sep = "_")
+    )
 
-  # Pivot data: calculate the average score for each LRSR-sample pair
+  # Create heatmap matrix
   heatmap_data <- lr_scores %>%
     group_by(.data[["LRSR"]], sample) %>%
     summarise(mean_score = mean(.data[[score_col]], na.rm = TRUE), .groups = "drop") %>%
     pivot_wider(names_from = sample, values_from = mean_score, values_fill = list(mean_score = NA))
     # pivot_wider(names_from = sample, values_from = mean_score, values_fill = list(mean_score = 0))
 
-  # Convert to matrix with LRSR as row names
   heatmap_matrix <- as.data.frame(heatmap_data)
   rownames(heatmap_matrix) <- heatmap_matrix$LRSR
   heatmap_matrix <- heatmap_matrix[,-1]
 
-  # Prepare annotation for columns using metadata.
+  display_names <- lr_scores$LR[match(rownames(heatmap_matrix), lr_scores$LRSR)]
+
+  # Prepare column annotation
   annotation_col <- NULL
 
   if ("sample" %in% colnames(metadata)) {
@@ -108,32 +116,86 @@ heatmap_sample <- function(lr_scores,
   annotation_col[] <- lapply(annotation_col, as.factor)
 
   # set color
-  auto_annotation_colors <- list()
+  get_base_colors <- function(n) {
+    if (n < 3) {
+      return(brewer.pal(3, "Paired")[1:n])
+    } else {
+      return(brewer.pal(min(9, n), "Paired"))
+    }
+  }
+
+  #  Set color for col annotations
+  auto_annotation_col_colors <- list()
   for(colname in colnames(annotation_col)){
     levels_current <- levels(annotation_col[[colname]])
     n_levels <- length(levels_current)
-    if(n_levels < 3){
-      base_colors <- brewer.pal(3, "Paired")[1:n_levels]
-    } else {
-      base_colors <- brewer.pal(min(9, n_levels), "Paired")
-    }
+    base_colors <- get_base_colors(n_levels)
     auto_colors <- colorRampPalette(base_colors)(n_levels)
-    auto_annotation_colors[[colname]] <- setNames(auto_colors, levels_current)
+    auto_annotation_col_colors[[colname]] <- setNames(auto_colors, levels_current)
   }
+
+  # Construct row annotations with sender and receiver
+  lr_annotations <- lr_scores %>%
+    distinct(.data[["LRSR"]], .data[["sender"]], .data[["receiver"]]) %>%
+    column_to_rownames("LRSR")
+
+  lr_annotations <- lr_annotations[rownames(heatmap_matrix), , drop = FALSE]
+  lr_annotations[] <- lapply(lr_annotations, as.factor)
+
+  # Rename columns to capitalize first letter
+  colnames(lr_annotations) <- c("Sender", "Receiver")
+
+  # Set color for row annotations
+  celltypes <- unique(c(
+    levels(lr_annotations$Sender),
+    levels(lr_annotations$Receiver)
+  ))
+  n_celltypes <- length(celltypes)
+
+  base_colors <- get_base_colors(n_celltypes)
+  unified_colors <- colorRampPalette(base_colors)(n_celltypes)
+  celltype_color_map <- setNames(unified_colors, celltypes)
+
+  auto_annotation_row_colors <- list(
+    Receiver = celltype_color_map[levels(lr_annotations$Receiver)],
+    Sender = celltype_color_map[levels(lr_annotations$Sender)]
+  )
+
+  lr_annotations <- lr_annotations[, c("Receiver", "Sender"), drop = FALSE]
+
+  # title
+  n_samples <- ncol(heatmap_matrix)
+  n_LRSR <- nrow(heatmap_matrix)
+
+  if (is.null(selected_sender) && is.null(selected_receiver)) {
+    tag <- "AllCells"
+  } else {
+    tag <- paste0(
+      if (!is.null(selected_sender)) paste(selected_sender, collapse = "+") else "All",
+      "_to_",
+      if (!is.null(selected_receiver)) paste(selected_receiver, collapse = "+") else "All"
+    )
+  }
+
+  basic_title <- ifelse(tag == "AllCells", "All Cells Communication", gsub("_to_", "->", tag))
+  heatmap_title <- sprintf("%s\nSamples: %d, LRSR: %d", basic_title, n_samples, n_LRSR)
 
   # Plot the heatmap using pheatmap
   ph <- pheatmap(heatmap_matrix,
                  color = colorRampPalette(rev(brewer.pal(n = 7, name = "RdYlBu")))(100),
+                 annotation_row = lr_annotations,
                  annotation_col = annotation_col,
-                 annotation_colors = auto_annotation_colors,
+                 annotation_colors = c(auto_annotation_row_colors, auto_annotation_col_colors),
                  treeheight_row	= treeheight_row,
                  treeheight_col = treeheight_col,
                  cluster_rows = TRUE,
                  cluster_cols = TRUE,
-                 show_rownames = FALSE,
-                 show_colnames = FALSE,
+                 show_rownames = show_rownames,
+                 show_colnames = show_colnames,
+                 labels_row = display_names,
                  fontsize = 8,
-                 border_color = "gray")
+                 border_color = "gray",
+                 main = heatmap_title)
 
   return(ph)
 }
@@ -153,7 +215,11 @@ heatmap_sample <- function(lr_scores,
 #' @param color_by \code{metadata} column name to color points in PCA plot (character).
 #' @param n_components Number of principal components to extract (numeric, default: 2).
 #'
-#' @return A list with two elements: the first is a ggplot2 PCA scatter plot and the second is the PCA results data frame.
+#' @return A list containing:
+#' \itemize{
+#'   \item plot - ggplot object of the PCA scatter plot
+#'   \item df - data frame used for the PCA results
+#' }
 #'
 #' @export
 #'
