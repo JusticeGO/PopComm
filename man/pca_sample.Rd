@@ -27,7 +27,11 @@ pca_sample(
 \item{n_components}{Number of principal components to extract (numeric, default: 2).}
 }
 \value{
-A list with two elements: the first is a ggplot2 PCA scatter plot and the second is the PCA results data frame.
+A list containing:
+\itemize{
+\item plot - ggplot object of the PCA scatter plot
+\item df - data frame used for the PCA results
+}
 }
 \description{
 This function performs principal component analysis (PCA) on ligand-receptor (LR) interaction scores across samples,
