@@ -13,8 +13,9 @@ heatmap_sample(
   selected_metadata = NULL,
   treeheight_row = 50,
   treeheight_col = 50,
-  show_rownames = FALSE,
-  show_colnames = FALSE
+  show_LR = FALSE,
+  show_sample = FALSE,
+  basic_title = NULL
 )
 }
 \arguments{
@@ -34,9 +35,11 @@ heatmap_sample(
 
 \item{treeheight_col}{The height of a tree for columns (numeric, default: 50).}
 
-\item{show_rownames}{Whether to display ligand-receptor names on rows (logical, default: FALSE).}
+\item{show_LR}{Whether to display ligand-receptor names on rows (logical, default: FALSE).}
 
-\item{show_colnames}{Whether to display sample names on columns (logical, default: FALSE).}
+\item{show_sample}{Whether to display sample names on columns (logical, default: FALSE).}
+
+\item{basic_title}{Custom heatmap title (optional).}
 }
 \value{
 A pheatmap object.

@@ -12,8 +12,9 @@
 #' @param selected_metadata List of column names in \code{metadata} to annotate samples (default: None, use all)(character vector).
 #' @param treeheight_row The height of a tree for rows (numeric, default: 50).
 #' @param treeheight_col The height of a tree for columns (numeric, default: 50).
-#' @param show_rownames Whether to display ligand-receptor names on rows (logical, default: FALSE).
-#' @param show_colnames Whether to display sample names on columns (logical, default: FALSE).
+#' @param show_LR Whether to display ligand-receptor names on rows (logical, default: FALSE).
+#' @param show_sample Whether to display sample names on columns (logical, default: FALSE).
+#' @param basic_title Custom heatmap title (optional).
 #'
 #' @return A pheatmap object.
 #'
@@ -43,8 +44,9 @@ heatmap_sample <- function(lr_scores,
                            selected_metadata = NULL,
                            treeheight_row = 50,
                            treeheight_col = 50,
-                           show_rownames = FALSE,
-                           show_colnames = FALSE) {
+                           show_LR = FALSE,
+                           show_sample = FALSE,
+                           basic_title = NULL) {
 
   # Parameter validation
   score <- match.arg(score)
@@ -167,6 +169,9 @@ heatmap_sample <- function(lr_scores,
   n_samples <- ncol(heatmap_matrix)
   n_LRSR <- nrow(heatmap_matrix)
 
+  n_samples_fmt <- format(n_samples, big.mark = ",", scientific = FALSE)
+  n_LRSR_fmt <- format(n_LRSR, big.mark = ",", scientific = FALSE)
+
   if (is.null(selected_sender) && is.null(selected_receiver)) {
     tag <- "AllCells"
   } else {
@@ -177,8 +182,15 @@ heatmap_sample <- function(lr_scores,
     )
   }
 
-  basic_title <- ifelse(tag == "AllCells", "All Cells Communication", gsub("_to_", "->", tag))
-  heatmap_title <- sprintf("%s\nSamples: %d, LRSR: %d", basic_title, n_samples, n_LRSR)
+  # basic_title <- ifelse(tag == "AllCells", "All Cell-Cell Communication", gsub("_to_", "->", tag))
+  if (is.null(basic_title) || basic_title == "") {
+    basic_title <- if (tag == "AllCells") {
+      "All Cell-Cell Communication"
+    } else {
+      gsub("_to_", "->", tag)
+    }
+  }
+  heatmap_title <- sprintf("%s\nSamples: %s, LRSR: %s", basic_title, n_samples_fmt, n_LRSR_fmt)
 
   # Plot the heatmap using pheatmap
   ph <- pheatmap(heatmap_matrix,
@@ -190,10 +202,10 @@ heatmap_sample <- function(lr_scores,
                  treeheight_col = treeheight_col,
                  cluster_rows = TRUE,
                  cluster_cols = TRUE,
-                 show_rownames = show_rownames,
-                 show_colnames = show_colnames,
+                 show_rownames = show_LR,
+                 show_colnames = show_sample,
                  labels_row = display_names,
-                 fontsize = 8,
+                 fontsize = 7,
                  border_color = "gray",
                  main = heatmap_title)
 
