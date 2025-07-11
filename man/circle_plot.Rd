@@ -25,7 +25,7 @@ containing at least the columns "sender", "receiver", and "cor".}
 \item{cutoff}{Minimum edge weight to display (numeric, default: 0).}
 }
 \value{
-A recordedplot object representing the network plot.
+A ggplot object representing the network plot.
 }
 \description{
 Plots a circular ligand-receptor (LR) interaction network with curved directed edges.

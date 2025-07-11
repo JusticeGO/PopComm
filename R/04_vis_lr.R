@@ -11,17 +11,19 @@
 #' @param show_self_interactions Logical indicating whether to display self-interactions (logical, default: TRUE).
 #' @param cutoff Minimum edge weight to display (numeric, default: 0).
 #'
-#' @return A recordedplot object representing the network plot.
+#' @return A ggplot object representing the network plot.
 #'
 #' @export
 #'
 #' @importFrom scales hue_pal rescale alpha col_numeric
 #' @importFrom dplyr %>% count rename left_join
 #' @importFrom stats aggregate
-#' @importFrom igraph graph_from_adjacency_matrix V E layout_in_circle ends delete_edges
+#' @importFrom igraph graph_from_adjacency_matrix V E layout_in_circle ends delete_edges plot.igraph
 #' @importFrom reshape2 dcast
 #' @importFrom rlang .data
 #' @importFrom grDevices recordPlot
+#' @importFrom ggplot2 ggplot ggplotGrob geom_tile scale_fill_gradientn guides guide_colorbar
+#' @importFrom cowplot plot_grid
 #'
 #' @examples
 #' # Plot Circular Cell-Cell Interaction Network
@@ -137,8 +139,68 @@ circle_plot <- function(filtered_lr,
        main = plot_title
   )
 
-  p <- grDevices::recordPlot()
-  return(p)
+  p_net <- grDevices::recordPlot()
+
+  # legend
+  w_range <- range(w)
+  legend_df <- data.frame(
+    x = 1,
+    y = seq(w_range[1], w_range[2], length.out = 100),
+    val = seq(w_range[1], w_range[2], length.out = 100)
+  )
+
+  legend_plot <- ggplot2::ggplot(legend_df, aes(x = x, y = y, fill = .data[["val"]])) +
+    ggplot2::geom_tile() +
+    ggplot2::scale_fill_gradientn(
+      colours = c("#377EB8", "grey80", "#E41A1C"),
+      name = plot_title,
+      limits = w_range,
+      breaks = pretty(w_range, n = 6)
+    ) +
+    ggplot2::theme_minimal() +
+    ggplot2::theme(
+      legend.position = "right",
+      legend.title.position = "left",
+      legend.title = ggplot2::element_text(size = 12, angle = 90, hjust = 0.5),
+      legend.text = ggplot2::element_text(size = 10)
+    ) +
+    ggplot2::guides(
+      fill = ggplot2::guide_colorbar(
+        barwidth = 0.8,
+        barheight = 10
+      )
+    )
+
+  get_legend <- function(plot, legend = NULL) {
+    gt <- ggplot2::ggplotGrob(plot)
+    pattern <- "guide-box"
+    if (!is.null(legend)) {
+      pattern <- paste0(pattern, "-", legend)
+    }
+    indices <- grep(pattern, gt$layout$name)
+
+    not_empty <- !vapply(
+      gt$grobs[indices],
+      inherits, what = "zeroGrob",
+      FUN.VALUE = logical(1)
+    )
+    indices <- indices[not_empty]
+
+    if (length(indices) > 0) {
+      return(gt$grobs[[indices[1]]])
+    }
+    return(NULL)
+  }
+
+  legend_only <- get_legend(legend_plot)
+
+  combined_plot <- cowplot::plot_grid(
+    p_net, legend_only,
+    rel_widths = c(6, 1),
+    nrow = 1
+  )
+
+  return(combined_plot)
 }
 
 

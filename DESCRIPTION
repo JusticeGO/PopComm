@@ -40,7 +40,8 @@ Imports:
     igraph (>= 2.0.0),
     parallel,
     pbmcapply (>= 1.5.0),
-    grDevices
+    grDevices,
+    cowplot (>= 1.1.1)
 License: MIT + file LICENSE
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
