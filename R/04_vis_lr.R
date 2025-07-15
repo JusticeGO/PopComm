@@ -24,6 +24,7 @@
 #' @importFrom grDevices recordPlot
 #' @importFrom ggplot2 ggplot ggplotGrob geom_tile scale_fill_gradientn guides guide_colorbar
 #' @importFrom cowplot plot_grid
+#' @importFrom utils packageVersion
 #'
 #' @examples
 #' # Plot Circular Cell-Cell Interaction Network
@@ -86,20 +87,48 @@ circle_plot <- function(filtered_lr,
   # Plotting layout
   layout <- igraph::layout_in_circle(g)
 
-  # Self-loops
-  if (show_self_interactions) {
-    loop.idx <- which(igraph::ends(g, igraph::E(g))[,1] == igraph::ends(g, igraph::E(g))[,2])
-    if (length(loop.idx) > 0) {
-      loop.nodes <- igraph::ends(g, igraph::E(g))[loop.idx, 1]
-      loop.idx.vertices <- match(loop.nodes, igraph::V(g)$name)
-      x <- layout[loop.idx.vertices, 1]
-      y <- layout[loop.idx.vertices, 2]
-      angles <- ifelse(x > 0, -atan(y / x), pi - atan(y / x))
-      igraph::E(g)$loop.angle <- NA
-      igraph::E(g)$loop.angle[loop.idx] <- angles
+  # # Self-loops
+  # if (show_self_interactions) {
+  #   loop.idx <- which(igraph::ends(g, igraph::E(g))[,1] == igraph::ends(g, igraph::E(g))[,2])
+  #   if (length(loop.idx) > 0) {
+  #     loop.nodes <- igraph::ends(g, igraph::E(g))[loop.idx, 1]
+  #     loop.idx.vertices <- match(loop.nodes, igraph::V(g)$name)
+  #     x <- layout[loop.idx.vertices, 1]
+  #     y <- layout[loop.idx.vertices, 2]
+  #     angles <- ifelse(x > 0, -atan(y / x), pi - atan(y / x))
+  #     igraph::E(g)$loop.angle <- NA
+  #     igraph::E(g)$loop.angle[loop.idx] <- angles
+  #   }
+  # } else {
+  #   g <- igraph::delete_edges(g, which(igraph::ends(g, igraph::E(g))[,1] == igraph::ends(g, igraph::E(g))[,2]))
+  # }
+
+  # Handle Self-loops based on igraph version
+  if (utils::packageVersion("igraph") <= "2.1.4") {
+    # For igraph 2.1.4 and earlier: manual loop angle calculation
+    if (show_self_interactions) {
+      loop.idx <- which(igraph::ends(g, igraph::E(g))[,1] == igraph::ends(g, igraph::E(g))[,2])
+      if (length(loop.idx) > 0) {
+        loop.nodes <- igraph::ends(g, igraph::E(g))[loop.idx, 1]
+        loop.idx.vertices <- match(loop.nodes, igraph::V(g)$name)
+        x <- layout[loop.idx.vertices, 1]
+        y <- layout[loop.idx.vertices, 2]
+        angles <- ifelse(x > 0, -atan(y / x), pi - atan(y / x))
+        igraph::E(g)$loop.angle <- NA
+        igraph::E(g)$loop.angle[loop.idx] <- angles
+      }
+    } else {
+      g <- igraph::delete_edges(g, which(igraph::ends(g, igraph::E(g))[,1] == igraph::ends(g, igraph::E(g))[,2]))
     }
+
   } else {
-    g <- igraph::delete_edges(g, which(igraph::ends(g, igraph::E(g))[,1] == igraph::ends(g, igraph::E(g))[,2]))
+    # For igraph 2.1.5 and later: automatic loop angle handling
+    if (!show_self_interactions) {
+      loop.idx <- which(igraph::ends(g, igraph::E(g))[,1] == igraph::ends(g, igraph::E(g))[,2])
+      if (length(loop.idx) > 0) {
+        g <- igraph::delete_edges(g, loop.idx)
+      }
+    }
   }
 
   edge.width <- scales::rescale(igraph::E(g)$weight, to = c(1, 10))
