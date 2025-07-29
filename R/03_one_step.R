@@ -21,6 +21,8 @@
 #'        Options: "holm", "hochberg", "hommel", "bonferroni", "BH", "BY", "fdr", "none".
 #' @param min_adjust_p Adjusted p-value threshold for significance (numeric, default 0.05).
 #' @param min_cor Minimum correlation coefficient threshold (numeric, default 0). Must be \eqn{\ge}{>=} 0.
+#' @param min_r2 Minimum coefficient of determination (R-squared) threshold for the linear regression model (numeric, default 0). Must be \eqn{\ge}{>=} 0.
+#' @param min_fstat Minimum F-statistic threshold for the linear regression model (numeric, default 0). Must be \eqn{\ge}{>=} 0.
 #' @param num_cores Number of CPU cores for parallel processing (numeric, default 10). Automatically capped at (system cores - 1).
 #' @param verbose Logical indicating whether to print progress messages (logical, default: TRUE).
 #'
@@ -32,6 +34,8 @@
 #'   \item{sender, receiver}{Sender and receiver cell types (res1/res2).}
 #'   \item{slope}{Slope of the linear regression model (res1/res2).}
 #'   \item{intercept}{Intercept of the linear regression model (res1/res2).}
+#'   \item{r2}{Coefficient of determination (R-squared) of the linear regression model (res1/res2).}
+#'   \item{fstat}{F-statistic of the linear regression model (res1/res2).}
 #'   \item{sample}{Sample identifier (res2).}
 #'   \item{score}{Projection score (raw co-expression intensity) (res2).}
 #'   \item{normalized_score}{Normalized score scaled between 0-1 (res2).}
@@ -85,6 +89,7 @@ one_step_single <- function(rna, sender, receiver, lr_database = PopComm::lr_db,
                             min_cell_ratio = 0.1, min_sample_ratio = 0.1,
                             cor_method = "spearman", adjust_method = "BH",
                             min_adjust_p = 0.05, min_cor = 0,
+                            min_r2 = 0, min_fstat = 0,            # v0.1.2.0
                             num_cores = 10, verbose = TRUE) {
 
   if (verbose) {
@@ -233,6 +238,9 @@ one_step_single <- function(rna, sender, receiver, lr_database = PopComm::lr_db,
 
     slope <- round(coef(model)[2], 5)
     intercept <- round(coef(model)[1], 5)
+    r2 <- round(summary(model)$r.squared, 5)             # v0.1.2.0
+    f_statistic <- summary(model)$fstatistic             # v0.1.2.0
+    fstat <- round(f_statistic[1], 5)                    # v0.1.2.0
 
     # cor.test
     res_cor <- tryCatch(
@@ -247,11 +255,12 @@ one_step_single <- function(rna, sender, receiver, lr_database = PopComm::lr_db,
     lr_name <- paste0(row.names(avg.s)[i], "_", row.names(avg.r)[i])
 
     return(c(
-      round(res_cor$estimate, 5),
-      round(res_cor$p.value, 15),
+      round(res_cor$estimate, 5),                        # cor
+      round(res_cor$p.value, 15),                        # p_val
       lr_name,
       pct1, pct2,
-      slope, intercept
+      slope, intercept,
+      r2, fstat                                          # v0.1.2.0
     ))
   }
 
@@ -274,8 +283,8 @@ one_step_single <- function(rna, sender, receiver, lr_database = PopComm::lr_db,
   }
   res <- data.frame(res_mat, stringsAsFactors = FALSE)
 
-  colnames(res) <- c("cor", "p_val", "lr", "pct1", "pct2", "slope", "intercept")
-  num_cols <- c("cor", "p_val", "pct1", "pct2", "slope", "intercept")
+  colnames(res) <- c("cor", "p_val", "lr", "pct1", "pct2", "slope", "intercept", "r2", "fstat")
+  num_cols <- c("cor", "p_val", "pct1", "pct2", "slope", "intercept", "r2", "fstat")
   res[num_cols] <- lapply(res[num_cols], as.numeric)
 
   res$adjust.p <- round(p.adjust(res$p_val, method = adjust_method), 15)
@@ -286,6 +295,8 @@ one_step_single <- function(rna, sender, receiver, lr_database = PopComm::lr_db,
   }
   res <- res[which(res$adjust.p < min_adjust_p &
                      res$cor > min_cor &
+                     res$r2 > min_r2 &                   # v0.1.2.0
+                     res$fstat > min_fstat &             # v0.1.2.0
                      res$pct1 > min_sample_ratio &
                      res$pct2 > min_sample_ratio), ]
   res <- res[order(res$adjust.p, -res$cor), ]
@@ -301,7 +312,8 @@ one_step_single <- function(rna, sender, receiver, lr_database = PopComm::lr_db,
   res$ligand <- str_match(res$lr, "^(.*)_")[,2]
   res$receptor <- str_match(res$lr, "_(.*)$")[,2]
 
-  selected_cols <- c("ligand", "receptor", "cor", "p_val", "adjust.p", "sender", "receiver", "slope", "intercept")
+  # selected_cols <- c("ligand", "receptor", "cor", "p_val", "adjust.p", "sender", "receiver", "slope", "intercept")
+  selected_cols <- c("ligand", "receptor", "cor", "p_val", "adjust.p", "sender", "receiver", "slope", "intercept", "r2", "fstat")
   res <- res %>% select(all_of(selected_cols))
 
   if (verbose) {
@@ -395,6 +407,8 @@ one_step_single <- function(rna, sender, receiver, lr_database = PopComm::lr_db,
 #'        Options: "holm", "hochberg", "hommel", "bonferroni", "BH", "BY", "fdr", "none".
 #' @param min_adjust_p Adjusted p-value threshold for significance (numeric, default 0.05).
 #' @param min_cor Minimum correlation coefficient threshold (numeric, default 0). Must be \eqn{\ge}{>=} 0.
+#' @param min_r2 Minimum coefficient of determination (R-squared) threshold for the linear regression model (numeric, default 0). Must be \eqn{\ge}{>=} 0.
+#' @param min_fstat Minimum F-statistic threshold for the linear regression model (numeric, default 0). Must be \eqn{\ge}{>=} 0.
 #' @param num_cores Number of CPU cores for parallel processing (numeric, default 10). Automatically capped at (system cores - 1).
 #' @param verbose Logical indicating whether to print progress messages (logical, default: TRUE).
 #'
@@ -406,6 +420,8 @@ one_step_single <- function(rna, sender, receiver, lr_database = PopComm::lr_db,
 #'   \item{sender, receiver}{Sender and receiver cell types (res1/res2).}
 #'   \item{slope}{Slope of the linear regression model (res1/res2).}
 #'   \item{intercept}{Intercept of the linear regression model (res1/res2).}
+#'   \item{r2}{Coefficient of determination (R-squared) of the linear regression model (res1/res2).}
+#'   \item{fstat}{F-statistic of the linear regression model (res1/res2).}
 #'   \item{sample}{Sample identifier (res2).}
 #'   \item{score}{Projection score (raw co-expression intensity) (res2).}
 #'   \item{normalized_score}{Normalized score scaled between 0-1 (res2).}
@@ -456,6 +472,7 @@ one_step_all <- function(rna, lr_database,
                          min_cell_ratio = 0.1, min_sample_ratio = 0.1,
                          cor_method = "spearman", adjust_method = "BH",
                          min_adjust_p = 0.05, min_cor = 0,
+                         min_r2 = 0, min_fstat = 0,            # v0.1.2.0
                          num_cores = 10, verbose = TRUE) {
 
   if (verbose) {
@@ -498,6 +515,8 @@ one_step_all <- function(rna, lr_database,
       adjust_method = adjust_method,
       min_adjust_p = min_adjust_p,
       min_cor = min_cor,
+      min_r2 = min_r2,                                # v0.1.2.0
+      min_fstat = min_fstat,                          # v0.1.2.0
       min_sample_ratio = min_sample_ratio,
       min_cell_ratio = min_cell_ratio,
       num_cores = num_cores,

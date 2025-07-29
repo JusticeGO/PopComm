@@ -19,6 +19,8 @@ filter_lr_single(
   adjust_method = "BH",
   min_adjust_p = 0.05,
   min_cor = 0,
+  min_r2 = 0,
+  min_fstat = 0,
   num_cores = 10,
   verbose = TRUE
 )
@@ -53,6 +55,10 @@ Options: "holm", "hochberg", "hommel", "bonferroni", "BH", "BY", "fdr", "none".}
 
 \item{min_cor}{Minimum correlation coefficient threshold (numeric, default 0). Must be \eqn{\ge}{>=} 0.}
 
+\item{min_r2}{Minimum coefficient of determination (R-squared) threshold for the linear regression model (numeric, default 0). Must be \eqn{\ge}{>=} 0.}
+
+\item{min_fstat}{Minimum F-statistic threshold for the linear regression model (numeric, default 0). Must be \eqn{\ge}{>=} 0.}
+
 \item{num_cores}{Number of CPU cores for parallel processing (numeric, default 10). Automatically capped at (system cores - 1).}
 
 \item{verbose}{Logical indicating whether to print progress messages (logical, default: TRUE).}
@@ -66,6 +72,8 @@ A data frame includes LR pairs with sufficient correlation and expression suppor
 \item{sender, receiver}{Sender and receiver cell types.}
 \item{slope}{Slope of the linear regression model.}
 \item{intercept}{Intercept of the linear regression model.}
+\item{r2}{Coefficient of determination (R-squared) of the linear regression model.}
+\item{fstat}{F-statistic of the linear regression model.}
 Rows are ordered by ascending \code{adjust.p} and descending \code{cor}.
 
 Returns \code{NULL} if:
