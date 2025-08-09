@@ -28,5 +28,6 @@ lr_db
 \description{
 A comprehensive database of human ligand-receptor pairs with gene/protein identifiers
 and supporting evidence from literature. Data imported from \code{human_lr_pair.txt}.
+CellTalkDB: A manually curated database of ligand-receptor interactions in human and mouse
 }
 \keyword{datasets}

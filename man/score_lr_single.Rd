@@ -17,7 +17,7 @@ score_lr_single(
 )
 }
 \arguments{
-\item{rna}{A Seurat object containing single-cell RNA expression data.}
+\item{rna}{A Seurat object or a matrix containing single-cell RNA expression data.}
 
 \item{sender}{Cell type designated as the ligand sender (character).}
 
@@ -26,15 +26,17 @@ score_lr_single(
 \item{filtered_lr}{A data frame of filtered ligand-receptor pairs from prior analysis (e.g., output of \code{filter_lr_single}).
 Must contain an "lr" column with pair identifiers in "Ligand_Receptor" format.}
 
-\item{sample_col}{Column name in Seurat metadata indicating sample identifiers (character).}
+\item{sample_col}{Metadata column name (character) for sample identifiers in Seurat mode; Matrix mode uses column index (numeric).}
 
-\item{cell_type_col}{Column name in Seurat metadata indicating cell type classifications (character).}
+\item{cell_type_col}{Metadata column name (character) for cell type in Seurat mode; Matrix mode uses column index (numeric).}
 
-\item{min_cells}{Minimum cells required per sample for both sender and receiver (numeric, default 50).}
+\item{min_cells}{Minimum number of cells per sample for both sender and receiver (numeric, default 50). Only used in Seurat mode.}
 
 \item{num_cores}{Number of CPU cores for parallel processing (numeric, default 10). Automatically capped at (system cores - 1).}
 
 \item{verbose}{Logical indicating whether to print progress messages (logical, default: TRUE).}
+
+\item{id_sep}{Separator used in matrix column names to split sample and cell type (e.g., \verb{--} for "Cardiac--sample1"). Only used in Matrix mode.}
 }
 \value{
 A data frame with projection scores per sample and LR pair. Columns:
@@ -53,9 +55,10 @@ Returns \code{NULL} if:
 }
 \description{
 This function calculates the projection scores for ligand-receptor (LR) pairs
-between specified sender and receiver cell types. The projection score is computed
-based on linear regression models, measuring the normalized distance of each sample's
-LR expression from the origin of the regression line.
+between specified sender and receiver cell types. This function supports both Seurat objects and
+average expression matrices (matrix of gene expression data with cell types and samples as column names).
+The projection score is computed based on linear regression models,
+measuring the normalized distance of each sample's LR expression from the origin of the regression line.
 }
 \examples{
 \donttest{

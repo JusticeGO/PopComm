@@ -2,18 +2,20 @@
 #'
 #' @description
 #' This function calculates the projection scores for ligand-receptor (LR) pairs
-#' between specified sender and receiver cell types. The projection score is computed
-#' based on linear regression models, measuring the normalized distance of each sample's
-#' LR expression from the origin of the regression line.
+#' between specified sender and receiver cell types. This function supports both Seurat objects and
+#' average expression matrices (matrix of gene expression data with cell types and samples as column names).
+#' The projection score is computed based on linear regression models,
+#' measuring the normalized distance of each sample's LR expression from the origin of the regression line.
 #'
-#' @param rna A Seurat object containing single-cell RNA expression data.
+#' @param rna A Seurat object or a matrix containing single-cell RNA expression data.
 #' @param sender Cell type designated as the ligand sender (character).
 #' @param receiver Cell type designated as the receptor receiver (character).
 #' @param filtered_lr A data frame of filtered ligand-receptor pairs from prior analysis (e.g., output of `filter_lr_single`).
 #'                  Must contain an "lr" column with pair identifiers in "Ligand_Receptor" format.
-#' @param sample_col Column name in Seurat metadata indicating sample identifiers (character).
-#' @param cell_type_col Column name in Seurat metadata indicating cell type classifications (character).
-#' @param min_cells Minimum cells required per sample for both sender and receiver (numeric, default 50).
+#' @param sample_col Metadata column name (character) for sample identifiers in Seurat mode; Matrix mode uses column index (numeric).
+#' @param cell_type_col Metadata column name (character) for cell type in Seurat mode; Matrix mode uses column index (numeric).
+#' @param id_sep Separator used in matrix column names to split sample and cell type (e.g., `--` for "Cardiac--sample1"). Only used in Matrix mode.
+#' @param min_cells Minimum number of cells per sample for both sender and receiver (numeric, default 50). Only used in Seurat mode.
 #' @param num_cores Number of CPU cores for parallel processing (numeric, default 10). Automatically capped at (system cores - 1).
 #' @param verbose Logical indicating whether to print progress messages (logical, default: TRUE).
 #'
@@ -90,6 +92,9 @@ score_lr_single <- function(rna, sender, receiver, filtered_lr,
       immediate. = TRUE
     )
     num_cores <- max_cores - 1
+  }
+  if (missing(sample_col) || missing(cell_type_col)) {
+    stop("When using expression matrix input, both 'sample_col' and 'cell_type_col' must be specified as integers.")
   }
 
   # Pre-process metadata
@@ -314,6 +319,9 @@ score_lr_all <- function(rna, filtered_lr,
       immediate. = TRUE
     )
     num_cores <- max_cores - 1
+  }
+  if (missing(sample_col) || missing(cell_type_col)) {
+    stop("When using expression matrix input, both 'sample_col' and 'cell_type_col' must be specified as integers.")
   }
 
   # Pre-process metadata

@@ -105,6 +105,9 @@ one_step_single <- function(rna, sender, receiver, lr_database = PopComm::lr_db,
     )
     num_cores <- max_cores - 1
   }
+  if (missing(sample_col) || missing(cell_type_col)) {
+    stop("When using expression matrix input, both 'sample_col' and 'cell_type_col' must be specified as integers.")
+  }
 
   # Pre-process metadata
   rna$sample <- rna@meta.data[, sample_col]
@@ -268,7 +271,7 @@ one_step_single <- function(rna, sender, receiver, lr_database = PopComm::lr_db,
     1:nrow(avg.r),
     calc_correlation,
     num_cores = num_cores,
-    export_vars = c("avg.s", "avg.r", "lr", "min_samples", "cor_method", "remove_outlier")
+    export_vars = c("avg.s", "avg.r", "lr", "min_samples", "cor_method", "remove_outlier", "calc_correlation")
     )
 
   # res_mat <- do.call(rbind, res_list)
@@ -487,6 +490,9 @@ one_step_all <- function(rna, lr_database,
       immediate. = TRUE
     )
     num_cores <- max_cores - 1
+  }
+  if (missing(sample_col) || missing(cell_type_col)) {
+    stop("When using expression matrix input, both 'sample_col' and 'cell_type_col' must be specified as integers.")
   }
 
   # Pre-process metadata

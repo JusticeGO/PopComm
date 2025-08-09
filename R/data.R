@@ -2,6 +2,7 @@
 #'
 #' A comprehensive database of human ligand-receptor pairs with gene/protein identifiers
 #' and supporting evidence from literature. Data imported from `human_lr_pair.txt`.
+#' CellTalkDB: A manually curated database of ligand-receptor interactions in human and mouse
 #'
 #' @format A data frame with 3,398 rows (pairs) and 10 columns:
 #' \describe{
@@ -20,59 +21,6 @@
 #' @source Source from CellTalkDB (PMID: 33147626).
 "lr_db"
 
-
-#' Example Seurat Object for PopComm Package
-#'
-#' A preprocessed Seurat object containing single-cell RNA sequencing data for demonstration
-#' and testing purposes across functions in the PopComm package. The object includes normalized
-#' expression data, metadata with sample and cell type annotations, and basic preprocessing
-#' steps (e.g., dimensionality reduction).
-#'
-#' @format A \code{\link[Seurat]{Seurat}} object with the following slots:
-#' \describe{
-#'   \item{assays}{RNA count matrix normalized by log1p.}
-#'   \item{meta.data}{Dataframe containing metadata columns:
-#'     \itemize{
-#'       \item \code{sample}: Sample identifier (e.g., "sample1", "sample2").
-#'       \item \code{broad.cell.type}: Cell type annotations (e.g., "Cardiac", "Fibroblast").
-#'     }
-#'   }
-#'   \item{reductions}{PCA and UMAP embeddings for visualization.}
-#' }
-#'
-#' @return A \code{\link[Seurat]{Seurat}} object containing example single-cell RNA-seq data.
-#' If the download fails, the function returns \code{NULL}.
-#'
-#' @source Subset of snRNA-seq data analyzed in our study,
-#' processed via standard workflow (see manuscript for details).
-#' Full dataset available at \href{https://zenodo.org/}{Zenodo}
-#' (DOI: 10.XXXX/zenodo.XXXXX).
-#'
-#' @keywords internal
-#' @export
-load_example_seurat <- function() {
-  # url <- "https://sandbox.zenodo.org/records/167208/files/example_seurat_obj.rds"
-  url <- "https://sandbox.zenodo.org/records/198976/files/example_seurat_obj.rds"
-  temp_file <- tempfile(fileext = ".rds")
-
-  old_timeout <- getOption("timeout")
-  options(timeout = 180)
-  on.exit(options(timeout = old_timeout))
-
-  tryCatch(
-    {
-      utils::download.file(url, temp_file, quiet = TRUE, mode = "wb")
-      readRDS(temp_file)
-    },
-    error = function(e) {
-      message("Download failed, please check the network or URL validity. Error message:")
-      message(e)
-      return(NULL)
-    }
-  )
-}
-
-
 #' Example for filtered_lr
 "filtered_lr_eg"
 
@@ -81,6 +29,9 @@ load_example_seurat <- function() {
 
 #' Example for metadata
 "metadata_eg"
+
+#' Example for matrix object
+"matrix_object"
 
 #' #' Example for seurat object
 #' "seurat_object"
