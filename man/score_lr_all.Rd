@@ -9,22 +9,25 @@ score_lr_all(
   filtered_lr,
   sample_col,
   cell_type_col,
+  id_sep,
   min_cells = 50,
   num_cores = 10,
   verbose = TRUE
 )
 }
 \arguments{
-\item{rna}{A Seurat object containing single-cell RNA expression data.}
+\item{rna}{A Seurat object or a matrix containing single-cell RNA expression data.}
 
 \item{filtered_lr}{A data frame of ligand-receptor pairs from prior analysis (e.g., output of \code{filter_lr_single}).
 Must contain an "lr" column with pair identifiers in "Ligand_Receptor" format.}
 
-\item{sample_col}{Column name in Seurat metadata indicating sample identifiers (character).}
+\item{sample_col}{Metadata column name (character) for sample identifiers in Seurat mode; Matrix mode uses column index (numeric).}
 
-\item{cell_type_col}{Column name in Seurat metadata indicating cell type classifications (character).}
+\item{cell_type_col}{Metadata column name (character) for cell type in Seurat mode; Matrix mode uses column index (numeric).}
 
-\item{min_cells}{Minimum cells required per sample for both sender and receiver (numeric, default 50).}
+\item{id_sep}{Separator used in matrix column names to split sample and cell type (e.g., \verb{--} for "Cardiac--sample1"). Only used in Matrix mode.}
+
+\item{min_cells}{Minimum number of cells per sample for both sender and receiver (numeric, default 50). Only used in Seurat mode.}
 
 \item{num_cores}{Number of CPU cores for parallel processing (numeric, default 10). Automatically capped at (system cores - 1).}
 
@@ -47,35 +50,37 @@ Returns \code{NULL} if:
 }
 \description{
 This function calculates the ligand-receptor (LR) projection scores between all combinations
-of sender and receiver cell types. The projection score is computed based on linear regression models,
-measuring the normalized distance of each sample's LR expression from the origin of the regression line.
+of sender and receiver cell types, and it supports both Seurat objects and average expression
+matrices (matrix of gene expression data with cell types and samples as column names).
+The projection score is computed based on linear regression models, measuring
+the normalized distance of each sample's LR expression from the origin of the regression line.
 }
 \examples{
 \donttest{
-  # Long-running example (may take >10s)
-  seurat_object <- load_example_seurat()
+  data(matrix_object)
   data(lr_db)
 
   # Analyzing ligand-receptor interactions between all cell types
   result01a <- filter_lr_all(
-    rna = seurat_object,
+    rna = matrix_object,
     lr_database = lr_db,
-    sample_col = "sample",
-    cell_type_col = "cell.type",
-    min_cells = 20,
+    sample_col = 2,
+    cell_type_col = 1,
+    id_sep = "--",
     min_samples = 10,
-    min_adjust_p = 0.5,
+    min_sample_ratio = 0.1,
+    min_adjust_p = 0.05,
     num_cores = 1,
     verbose = TRUE
   )
 
   # Analyzing ligand-receptor projection scores between all cell types
   result02a <- score_lr_all(
-    rna = seurat_object,
+    rna = matrix_object,
     filtered_lr = result01a,
-    sample_col = "sample",
-    cell_type_col = "cell.type",
-    min_cells = 20,
+    sample_col = 2,
+    cell_type_col = 1,
+    id_sep = "--",
     num_cores = 1,
     verbose = TRUE
   )

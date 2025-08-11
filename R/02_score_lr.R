@@ -2,7 +2,7 @@
 #'
 #' @description
 #' This function calculates the projection scores for ligand-receptor (LR) pairs
-#' between specified sender and receiver cell types. This function supports both Seurat objects and
+#' between specified sender and receiver cell types, and it supports both Seurat objects and
 #' average expression matrices (matrix of gene expression data with cell types and samples as column names).
 #' The projection score is computed based on linear regression models,
 #' measuring the normalized distance of each sample's LR expression from the origin of the regression line.
@@ -43,34 +43,34 @@
 #'
 #' @examples
 #' \donttest{
-#'   # Long-running example (may take >10s)
-#'   seurat_object <- load_example_seurat()
+#'   data(matrix_object)
 #'   data(lr_db)
 #'
-#'   # Analyzing ligand-receptor interactions: Cardiac -> Perivascular
+#'   # Analyzing ligand-receptor interactions: Perivascular -> Endothelial
 #'   result01s <- filter_lr_single(
-#'     rna = seurat_object,
-#'     sender = "Cardiac",
-#'     receiver = "Perivascular",
+#'     rna = matrix_object,
+#'     sender = "Perivascular",
+#'     receiver = "Endothelial",
 #'     lr_database = lr_db,
-#'     sample_col = "sample",
-#'     cell_type_col = "cell.type",
-#'     min_cells = 20,
+#'     sample_col = 2,
+#'     cell_type_col = 1,
+#'     id_sep = "--",
 #'     min_samples = 10,
-#'     min_adjust_p = 0.5,
+#'     min_sample_ratio = 0.1,
+#'     min_adjust_p = 0.05,
 #'     num_cores = 1,
 #'     verbose = TRUE
 #'   )
 #'
-#'   # Analyzing ligand-receptor projection scores: Cardiac -> Perivascular
+#'   # Analyzing ligand-receptor projection scores: Perivascular -> Endothelial
 #'   result02s <- score_lr_single(
-#'     rna = seurat_object,
-#'     sender = "Cardiac",
-#'     receiver = "Perivascular",
+#'     rna = matrix_object,
+#'     sender = "Perivascular",
+#'     receiver = "Endothelial",
 #'     filtered_lr = result01s,
-#'     sample_col = "sample",
-#'     cell_type_col = "cell.type",
-#'     min_cells = 20,
+#'     sample_col = 2,
+#'     cell_type_col = 1,
+#'     id_sep = "--",
 #'     num_cores = 1,
 #'     verbose = TRUE
 #'   )
@@ -81,6 +81,7 @@
 #' }
 score_lr_single <- function(rna, sender, receiver, filtered_lr,
                             sample_col, cell_type_col,
+                            id_sep,                            # v0.2.0.0
                             min_cells = 50, num_cores = 10, verbose = TRUE) {
 
   # Check parameters
@@ -97,75 +98,197 @@ score_lr_single <- function(rna, sender, receiver, filtered_lr,
     stop("When using expression matrix input, both 'sample_col' and 'cell_type_col' must be specified as integers.")
   }
 
-  # Pre-process metadata
-  rna$sample <- rna@meta.data[, sample_col]
-  rna$cell.type <- rna@meta.data[, cell_type_col]
-  cell_types <- unique(rna@meta.data[[cell_type_col]])
-  if (length(cell_types) < 1) {
-    stop("No cell types found in column '", cell_type_col, "'.", call. = FALSE)
+
+  # Check if input is Seurat or average expression matrix v0.2.0.0
+  is_seurat <- inherits(rna, "Seurat")
+  is_matrix <- is.matrix(rna)
+
+  if (!is_seurat && !is_matrix) {
+    stop("'rna' must be either a Seurat object or a matrix of average expression data.")
   }
 
-  selected_types <- unique(c(sender, receiver))
-  missing_types <- setdiff(selected_types, cell_types)
-  if (length(missing_types) > 0) {
-    stop("Missing cell types: ", paste(missing_types, collapse = ", "))
-  }
+  if (is_seurat) {
+    input_type <- "Seurat"
 
-  # Step 1: Add sample and cell type columns to the RNA data object and subset
-  if (verbose) {
-    message("Analyzing ligand-receptor projection scores: ", sender, " -> ", receiver)
-  }
-
-  # Determine the subset of data
-  if (!setequal(selected_types, cell_types)) {
-    if (verbose) {
-      message("Subsetting ", sender, " (sender) and ", receiver, " (receiver)...")
+    if (!is.character(sample_col)) {
+      stop("Seurat mode: 'sample_col' must be a character string.")
     }
-    cells.to.keep <- rna$cell.type %in% selected_types
-    rna.data <- rna[, cells.to.keep]
+    if (!is.character(cell_type_col)) {
+      stop("Seurat mode: 'cell_type_col' must be a character string.")
+    }
+
+    if (!sample_col %in% colnames(rna@meta.data)) {
+      stop(paste("Column", sample_col, "not found in Seurat metadata"))
+    }
+    if (!cell_type_col %in% colnames(rna@meta.data)) {
+      stop(paste("Column", cell_type_col, "not found in Seurat metadata"))
+    }
+    rna$sample <- rna@meta.data[, sample_col]
+    rna$cell.type <- rna@meta.data[, cell_type_col]
+
+  } else if (is_matrix && nrow(rna) > 1 && ncol(rna) > 1) {
+    input_type <- "Matrix"
+
+    if (!is.numeric(sample_col) || sample_col <= 0 || sample_col %% 1 != 0) {
+      stop("Matrix mode: 'sample_col' must be a positive integer.")
+    }
+    if (!is.numeric(cell_type_col) || cell_type_col <= 0 || cell_type_col %% 1 != 0) {
+      stop("Matrix mode: 'cell_type_col' must be a positive integer.")
+    }
+    colnames_split <- strsplit(colnames(rna), id_sep, fixed = TRUE)
+    if (!all(lengths(colnames_split) >= max(sample_col, cell_type_col))) {
+      stop("Column names do not contain enough fields with the specified separator.")
+    }
   } else {
-    rna.data <- rna
+    stop("Input must be either a Seurat object or an average expression matrix.")
   }
 
-  # Step 2: Filter samples based on cell counts per sample
-  if (verbose) {
-    message("Filtering samples with cell counts...")
-  }
-  cell_counts <- table(rna.data$sample, rna.data$cell.type)
-  if (sender != receiver) {
-    valid_samples <- names(which(
-      cell_counts[, sender] > min_cells &
-        cell_counts[, receiver] > min_cells
-      ))
-  } else {
-    valid_samples <- names(which(
-      cell_counts[, sender] > min_cells
-      ))
-  }
 
-  if (verbose) {
-    message("Remaining samples after filtering: ", length(valid_samples))
-  }
-  if (length(valid_samples) < 2) {
-    warning(
-      sender, " -> ", receiver, ": insufficient valid samples (", length(valid_samples), " < 2).\n",
-      "Check: min_cells (current=", min_cells, ") or sample collection.",
-      immediate. = TRUE
+  if (input_type == "Seurat") {
+    # Handle cell type check
+    cell_types <- unique(rna@meta.data[[cell_type_col]])
+    if (length(cell_types) < 1) {
+      stop("No cell types found in column '", cell_type_col, "'.", call. = FALSE)
+    }
+
+    selected_types <- unique(c(sender, receiver))
+    missing_types <- setdiff(selected_types, cell_types)
+    if (length(missing_types) > 0) {
+      stop("Missing cell types: ", paste(missing_types, collapse = ", "))
+    }
+
+    # Step 1: Add sample and cell type columns to the RNA data object and subset
+    if (verbose) {
+      message("(Seurat mode) Analyzing ligand-receptor projection scores: ", sender, " -> ", receiver)
+    }
+
+    # Determine the subset of data
+    if (!setequal(selected_types, cell_types)) {
+      if (verbose) {
+        message("Subsetting ", sender, " (sender) and ", receiver, " (receiver)...")
+      }
+      cells.to.keep <- rna$cell.type %in% selected_types
+      rna.data <- rna[, cells.to.keep]
+    } else {
+      rna.data <- rna
+    }
+
+    # Step 2: Filter samples based on cell counts per sample
+    if (verbose) {
+      message("Filtering samples with cell counts...")
+    }
+    cell_counts <- table(rna.data$sample, rna.data$cell.type)
+    if (sender != receiver) {
+      valid_samples <- names(which(
+        cell_counts[, sender] > min_cells &
+          cell_counts[, receiver] > min_cells
+      ))
+    } else {
+      valid_samples <- names(which(
+        cell_counts[, sender] > min_cells
+      ))
+    }
+
+    if (verbose) {
+      message("Remaining samples after filtering: ", length(valid_samples))
+    }
+    if (length(valid_samples) < 2) {
+      warning(
+        sender, " -> ", receiver, ": insufficient valid samples (", length(valid_samples), " < 2).\n",
+        "Check: min_cells (current=", min_cells, ") or sample collection.",
+        immediate. = TRUE
+      )
+      return(NULL)
+    }
+    rna.data <- subset(rna.data, sample %in% valid_samples)
+
+    # Step 3: Load the ligand-receptor pairs after filtering for interactions
+    lr <- filtered_lr
+
+    # Step 4: Compute average expression for each sample-cell type group
+    rna.data$group <- paste0(rna.data$sample, "-lr-", rna.data$cell.type)
+    if (verbose) {
+      message("Computing average expression for each sample-cell type group...")
+    }
+    rna.avg <- Seurat::AverageExpression(rna.data, group.by = "group")[[1]]   # seurat v4/v5
+
+
+  } else if (input_type == "Matrix") {
+    # Split the column names using the specified separator
+    cell_types <- unique(sapply(colnames_split, `[`, cell_type_col))
+    # samples <- unique(sapply(colnames_split, `[`, sample_col))
+
+    if (length(cell_types) < 1) {
+      stop("No cell types found in column '", cell_type_col, "'.", call. = FALSE)
+    }
+
+    # Ensure sender and receiver are valid cell types in the matrix
+    selected_types <- unique(c(sender, receiver))
+    missing_types <- setdiff(selected_types, cell_types)
+    if (length(missing_types) > 0) {
+      stop("Missing cell types: ", paste(missing_types, collapse = ", "))
+    }
+
+    # Step 1: Add sample and cell type columns to the RNA data object and subset
+    if (verbose) {
+      message("(Matrix mode) Analyzing ligand-receptor projection scores: ", sender, " -> ", receiver)
+    }
+
+    # Determine the subset of data
+    cell_types_loc <- sapply(colnames_split, `[`, cell_type_col)
+    samples_loc <- sapply(colnames_split, `[`, sample_col)
+
+    if (!setequal(selected_types, cell_types)) {
+      if (verbose) {
+        message("Subsetting ", sender, " (sender) and ", receiver, " (receiver)...")
+      }
+      cells.to.keep <- cell_types_loc %in% selected_types
+      rna.data <- rna[, cells.to.keep]
+    } else {
+      rna.data <- rna
+    }
+
+    # Step 2: Filter samples based on min_samples
+    valid_samples <- intersect(
+      unique(samples_loc[cell_types_loc == sender]),
+      unique(samples_loc[cell_types_loc == receiver])
     )
-    return(NULL)
+
+    if (verbose) {
+      message("Remaining samples after filtering: ", length(valid_samples))
+    }
+    if (length(valid_samples) < 2) {
+      warning(
+        sender, " -> ", receiver, ": insufficient valid samples (", length(valid_samples), " < 2).\n",
+        "Check: min_samples or sample collection.",
+        immediate. = TRUE
+      )
+      return(NULL)
+    }
+
+    colnames_split <- strsplit(colnames(rna.data), id_sep, fixed = TRUE)
+    cell_types_loc <- sapply(colnames_split, `[`, cell_type_col)
+    samples_loc <- sapply(colnames_split, `[`, sample_col)
+
+    rna.data <- rna.data[, samples_loc %in% valid_samples]
+
+    # Step 3: Load the ligand-receptor pairs after filtering for interactions
+    lr <- filtered_lr
+
+    # Step 4: Reorganization average expression for each sample-cell type group
+    if (verbose) {
+      message("Reorganization average expression for each sample-cell type group...")
+    }
+    colnames_split <- strsplit(colnames(rna.data), id_sep, fixed = TRUE)
+    cell_types_loc <- sapply(colnames_split, `[`, cell_type_col)
+    samples_loc <- sapply(colnames_split, `[`, sample_col)
+
+    colnames(rna.data) <- paste0(samples_loc, "-lr-", cell_types_loc)
+    rna.avg <- rna.data
   }
 
-  rna.data <- subset(rna.data, sample %in% valid_samples)
 
-  # Step 3: Load the ligand-receptor pairs after filtering for interactions
-  lr <- filtered_lr
-
-  # Step 4: Compute average expression for each sample-cell type group
-  rna.data$group <- paste0(rna.data$sample, "-lr-", rna.data$cell.type)
-  if (verbose) {
-    message("Computing average expression for each sample-cell type group...")
-  }
-  rna.avg <- Seurat::AverageExpression(rna.data, group.by = "group")[[1]]   # seurat v4/v5
+  # Unified steps
   rna.avg <- round(rna.avg, 5)
 
   avg.s <- rna.avg[, grep(sender, colnames(rna.avg))]
@@ -229,7 +352,7 @@ score_lr_single <- function(rna, sender, receiver, filtered_lr,
   score.df <- bind_rows(score_list) %>% na.omit()
 
   if (verbose) {
-    message("LR projection score analysis complete. Identified ", nrow(score.df), " significant ligand-receptor pairs.")
+    message("LR projection score analysis complete. Identified ", nrow(score.df), " significant ligand-receptor pairs.\n")
   }
 
   return(score.df)
@@ -241,15 +364,18 @@ score_lr_single <- function(rna, sender, receiver, filtered_lr,
 #'
 #' @description
 #' This function calculates the ligand-receptor (LR) projection scores between all combinations
-#' of sender and receiver cell types. The projection score is computed based on linear regression models,
-#' measuring the normalized distance of each sample's LR expression from the origin of the regression line.
+#' of sender and receiver cell types, and it supports both Seurat objects and average expression
+#' matrices (matrix of gene expression data with cell types and samples as column names).
+#' The projection score is computed based on linear regression models, measuring
+#' the normalized distance of each sample's LR expression from the origin of the regression line.
 #'
-#' @param rna A Seurat object containing single-cell RNA expression data.
+#' @param rna A Seurat object or a matrix containing single-cell RNA expression data.
 #' @param filtered_lr A data frame of ligand-receptor pairs from prior analysis (e.g., output of `filter_lr_single`).
 #'                  Must contain an "lr" column with pair identifiers in "Ligand_Receptor" format.
-#' @param sample_col Column name in Seurat metadata indicating sample identifiers (character).
-#' @param cell_type_col Column name in Seurat metadata indicating cell type classifications (character).
-#' @param min_cells Minimum cells required per sample for both sender and receiver (numeric, default 50).
+#' @param sample_col Metadata column name (character) for sample identifiers in Seurat mode; Matrix mode uses column index (numeric).
+#' @param cell_type_col Metadata column name (character) for cell type in Seurat mode; Matrix mode uses column index (numeric).
+#' @param id_sep Separator used in matrix column names to split sample and cell type (e.g., `--` for "Cardiac--sample1"). Only used in Matrix mode.
+#' @param min_cells Minimum number of cells per sample for both sender and receiver (numeric, default 50). Only used in Seurat mode.
 #' @param num_cores Number of CPU cores for parallel processing (numeric, default 10). Automatically capped at (system cores - 1).
 #' @param verbose Logical indicating whether to print progress messages (logical, default: TRUE).
 #'
@@ -274,30 +400,30 @@ score_lr_single <- function(rna, sender, receiver, filtered_lr,
 #'
 #' @examples
 #' \donttest{
-#'   # Long-running example (may take >10s)
-#'   seurat_object <- load_example_seurat()
+#'   data(matrix_object)
 #'   data(lr_db)
 #'
 #'   # Analyzing ligand-receptor interactions between all cell types
 #'   result01a <- filter_lr_all(
-#'     rna = seurat_object,
+#'     rna = matrix_object,
 #'     lr_database = lr_db,
-#'     sample_col = "sample",
-#'     cell_type_col = "cell.type",
-#'     min_cells = 20,
+#'     sample_col = 2,
+#'     cell_type_col = 1,
+#'     id_sep = "--",
 #'     min_samples = 10,
-#'     min_adjust_p = 0.5,
+#'     min_sample_ratio = 0.1,
+#'     min_adjust_p = 0.05,
 #'     num_cores = 1,
 #'     verbose = TRUE
 #'   )
 #'
 #'   # Analyzing ligand-receptor projection scores between all cell types
 #'   result02a <- score_lr_all(
-#'     rna = seurat_object,
+#'     rna = matrix_object,
 #'     filtered_lr = result01a,
-#'     sample_col = "sample",
-#'     cell_type_col = "cell.type",
-#'     min_cells = 20,
+#'     sample_col = 2,
+#'     cell_type_col = 1,
+#'     id_sep = "--",
 #'     num_cores = 1,
 #'     verbose = TRUE
 #'   )
@@ -308,6 +434,7 @@ score_lr_single <- function(rna, sender, receiver, filtered_lr,
 #' }
 score_lr_all <- function(rna, filtered_lr,
                          sample_col, cell_type_col,
+                         id_sep,                            # v0.2.0.0
                          min_cells = 50, num_cores = 10, verbose = TRUE) {
 
   # Check parameters
@@ -324,21 +451,87 @@ score_lr_all <- function(rna, filtered_lr,
     stop("When using expression matrix input, both 'sample_col' and 'cell_type_col' must be specified as integers.")
   }
 
-  # Pre-process metadata
-  rna$sample <- rna@meta.data[, sample_col]
-  rna$cell.type <- rna@meta.data[, cell_type_col]
-  cell_types <- unique(rna@meta.data[[cell_type_col]])
-  if (length(cell_types) < 1) {
-    stop("No cell types found in column '", cell_type_col, "'.", call. = FALSE)
+  # Check if input is Seurat or average expression matrix v0.2.0.0
+  is_seurat <- inherits(rna, "Seurat")
+  is_matrix <- is.matrix(rna)
+
+  if (!is_seurat && !is_matrix) {
+    stop("'rna' must be either a Seurat object or a matrix of average expression data.")
   }
 
-  if (verbose) {
-    message("Analyzing ligand-receptor projection scores between all cell types...")
-    message("Cell types: ", paste(cell_types, collapse = ", "), "\n")
+
+  if (is_seurat) {
+    input_type <- "Seurat"
+    if (!is.character(sample_col)) {
+      stop("Seurat mode: 'sample_col' must be a character string.")
+    }
+    if (!is.character(cell_type_col)) {
+      stop("Seurat mode: 'cell_type_col' must be a character string.")
+    }
+
+    if (!sample_col %in% colnames(rna@meta.data)) {
+      stop(paste("Column", sample_col, "not found in Seurat metadata"))
+    }
+    if (!cell_type_col %in% colnames(rna@meta.data)) {
+      stop(paste("Column", cell_type_col, "not found in Seurat metadata"))
+    }
+    rna$sample <- rna@meta.data[, sample_col]
+    rna$cell.type <- rna@meta.data[, cell_type_col]
+
+  } else if (is_matrix && nrow(rna) > 1 && ncol(rna) > 1) {
+    input_type <- "Matrix"
+    if (!is.numeric(sample_col) || sample_col <= 0 || sample_col %% 1 != 0) {
+      stop("Matrix mode: 'sample_col' must be a positive integer.")
+    }
+    if (!is.numeric(cell_type_col) || cell_type_col <= 0 || cell_type_col %% 1 != 0) {
+      stop("Matrix mode: 'cell_type_col' must be a positive integer.")
+    }
+    colnames_split <- strsplit(colnames(rna), id_sep, fixed = TRUE)
+    if (!all(lengths(colnames_split) >= max(sample_col, cell_type_col))) {
+      stop("Column names do not contain enough fields with the specified separator.")
+    }
+  } else {
+    stop("Input must be either a Seurat object or an average expression matrix.")
   }
 
-  all_results <- list()
 
+  # check and set
+  if (input_type == "Seurat") {
+    # Handle cell type check
+    cell_types <- unique(rna@meta.data[[cell_type_col]])
+    if (length(cell_types) < 1) {
+      stop("No cell types found in column '", cell_type_col, "'.", call. = FALSE)
+    }
+
+    if (verbose) {
+      message("(Seurat mode) Analyzing ligand-receptor projection scores between all cell types...")
+      message("Cell types: ", paste(cell_types, collapse = ", "), "\n")
+    }
+
+    sample_col <- "sample"
+    cell_type_col <- "cell.type"
+    id_sep <- ""
+
+
+  } else if (input_type == "Matrix") {
+    # Split the column names using the specified separator
+    cell_types <- unique(sapply(colnames_split, `[`, cell_type_col))
+    samples <- unique(sapply(colnames_split, `[`, sample_col))
+    if (length(cell_types) < 1) {
+      stop("No cell types found in column '", cell_type_col, "'.", call. = FALSE)
+    }
+
+    if (verbose) {
+      message("(Matrix mode) Analyzing ligand-receptor projection scores between all cell types...")
+      message("Cell types: ", paste(cell_types, collapse = ", "), "\n")
+    }
+
+    sample_col <- sample_col
+    cell_type_col <- cell_type_col
+  }
+
+
+  # main
   # split filtered_lr data
   split_data <- list()
   for (i in 1:nrow(filtered_lr)) {
@@ -359,8 +552,9 @@ score_lr_all <- function(rna, filtered_lr,
       sender = sender,
       receiver = receiver,
       filtered_lr = lr_s,
-      sample_col = "sample",
-      cell_type_col = "cell.type",
+      sample_col = sample_col,
+      cell_type_col = cell_type_col,
+      id_sep = id_sep,
       min_cells = min_cells,
       num_cores = num_cores,
       verbose = verbose

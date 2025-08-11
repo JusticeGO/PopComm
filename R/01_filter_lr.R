@@ -236,7 +236,6 @@ filter_lr_single <- function(rna, sender, receiver, lr_database = PopComm::lr_db
     if (verbose) {
       message("Computing average expression for each sample-cell type group...")
     }
-
     rna.avg <- Seurat::AverageExpression(rna.data, group.by = "group")[[1]]   # seurat v4/v5
 
 
@@ -602,6 +601,7 @@ filter_lr_all <- function(rna, lr_database = PopComm::lr_db,
     sample_col <- "sample"
     cell_type_col <- "cell.type"
     id_sep <- ""
+
 
   } else if (input_type == "Matrix") {
     # Split the column names using the specified separator

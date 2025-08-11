@@ -9,6 +9,7 @@ one_step_all(
   lr_database,
   sample_col,
   cell_type_col,
+  id_sep,
   min_cells = 50,
   min_samples = 10,
   min_cell_ratio = 0.1,
@@ -24,19 +25,21 @@ one_step_all(
 )
 }
 \arguments{
-\item{rna}{A Seurat object containing single-cell RNA expression data.}
+\item{rna}{A Seurat object or a matrix containing single-cell RNA expression data.}
 
 \item{lr_database}{A data frame of ligand-receptor pairs with columns "ligand_gene_symbol" and "receptor_gene_symbol".}
 
-\item{sample_col}{Column name in Seurat metadata indicating sample identifiers (character).}
+\item{sample_col}{Metadata column name (character) for sample identifiers in Seurat mode; Matrix mode uses column index (numeric).}
 
-\item{cell_type_col}{Column name in Seurat metadata indicating cell type classifications (character).}
+\item{cell_type_col}{Metadata column name (character) for cell type in Seurat mode; Matrix mode uses column index (numeric).}
 
-\item{min_cells}{Minimum cells required per sample for both sender and receiver (numeric, default 50).}
+\item{id_sep}{Separator used in matrix column names to split sample and cell type (e.g., \verb{--} for "Cardiac--sample1"). Only used in Matrix mode.}
 
-\item{min_samples}{Minimum valid samples required to proceed (numeric, default 10).}
+\item{min_cells}{Minimum number of cells per sample for both sender and receiver (numeric, default 50). Only used in Seurat mode.}
 
-\item{min_cell_ratio}{Minimum ratio of cells expressing ligand and receptor genes in sender or receiver cells (numeric, default 0.1).}
+\item{min_samples}{Minimum number of valid samples to proceed (numeric, default 10).}
+
+\item{min_cell_ratio}{Minimum ratio of cells expressing ligand and receptor genes in sender or receiver cells (numeric, default 0.1). Only used in Seurat mode.}
 
 \item{min_sample_ratio}{Minimum ratio of samples in which both the ligand and receptor genes must be expressed (numeric, default 0.1).}
 
@@ -49,7 +52,7 @@ Options: "holm", "hochberg", "hommel", "bonferroni", "BH", "BY", "fdr", "none".}
 
 \item{min_cor}{Minimum correlation coefficient threshold (numeric, default 0). Must be \eqn{\ge}{>=} 0.}
 
-\item{min_r2}{Minimum coefficient of determination (R-squared) threshold for the linear regression model (numeric, default 0). Must be \eqn{\ge}{>=} 0.}
+\item{min_r2}{Minimum R-squared threshold for the linear regression model (numeric, default 0). Must be \eqn{\ge}{>=} 0.}
 
 \item{min_fstat}{Minimum F-statistic threshold for the linear regression model (numeric, default 0). Must be \eqn{\ge}{>=} 0.}
 
@@ -83,27 +86,26 @@ Returns \code{NULL} if:
 }
 \description{
 Performs integrated analysis of ligand-receptor (LR) pairs through two consecutive phases:
-\enumerate{
-\item Filters LR pairs and analyzes correlations across all cell types.
-\item Calculates projection scores based on regression models for valid pairs.
-Returns comprehensive results combining statistical metrics.
-}
+(1) Filters LR pairs and analyzes correlations across all cell types;
+(2) Calculates projection scores based on regression models for valid pairs.
+Returns comprehensive results combining statistical metrics. This function supports both Seurat objects and
+average expression matrices (matrix of gene expression data with cell types and samples as column names).
 }
 \examples{
 \donttest{
-  # Long-running example (may take >10s)
-  seurat_object <- load_example_seurat()
+  data(matrix_object)
   data(lr_db)
 
   # Integrated analysis across all cell types
   res_all <- one_step_all(
-    rna = seurat_object,
+    rna = matrix_object,
     lr_database = lr_db,
-    sample_col = "sample",
-    cell_type_col = "cell.type",
-    min_cells = 20,
+    sample_col = 2,
+    cell_type_col = 1,
+    id_sep = "--",
     min_samples = 10,
-    min_adjust_p = 0.5,
+    min_sample_ratio = 0.1,
+    min_adjust_p = 0.05,
     num_cores = 1,
     verbose = TRUE
   )

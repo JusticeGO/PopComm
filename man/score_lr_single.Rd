@@ -11,6 +11,7 @@ score_lr_single(
   filtered_lr,
   sample_col,
   cell_type_col,
+  id_sep,
   min_cells = 50,
   num_cores = 10,
   verbose = TRUE
@@ -30,13 +31,13 @@ Must contain an "lr" column with pair identifiers in "Ligand_Receptor" format.}
 
 \item{cell_type_col}{Metadata column name (character) for cell type in Seurat mode; Matrix mode uses column index (numeric).}
 
+\item{id_sep}{Separator used in matrix column names to split sample and cell type (e.g., \verb{--} for "Cardiac--sample1"). Only used in Matrix mode.}
+
 \item{min_cells}{Minimum number of cells per sample for both sender and receiver (numeric, default 50). Only used in Seurat mode.}
 
 \item{num_cores}{Number of CPU cores for parallel processing (numeric, default 10). Automatically capped at (system cores - 1).}
 
 \item{verbose}{Logical indicating whether to print progress messages (logical, default: TRUE).}
-
-\item{id_sep}{Separator used in matrix column names to split sample and cell type (e.g., \verb{--} for "Cardiac--sample1"). Only used in Matrix mode.}
 }
 \value{
 A data frame with projection scores per sample and LR pair. Columns:
@@ -55,41 +56,41 @@ Returns \code{NULL} if:
 }
 \description{
 This function calculates the projection scores for ligand-receptor (LR) pairs
-between specified sender and receiver cell types. This function supports both Seurat objects and
+between specified sender and receiver cell types, and it supports both Seurat objects and
 average expression matrices (matrix of gene expression data with cell types and samples as column names).
 The projection score is computed based on linear regression models,
 measuring the normalized distance of each sample's LR expression from the origin of the regression line.
 }
 \examples{
 \donttest{
-  # Long-running example (may take >10s)
-  seurat_object <- load_example_seurat()
+  data(matrix_object)
   data(lr_db)
 
-  # Analyzing ligand-receptor interactions: Cardiac -> Perivascular
+  # Analyzing ligand-receptor interactions: Perivascular -> Endothelial
   result01s <- filter_lr_single(
-    rna = seurat_object,
-    sender = "Cardiac",
-    receiver = "Perivascular",
+    rna = matrix_object,
+    sender = "Perivascular",
+    receiver = "Endothelial",
     lr_database = lr_db,
-    sample_col = "sample",
-    cell_type_col = "cell.type",
-    min_cells = 20,
+    sample_col = 2,
+    cell_type_col = 1,
+    id_sep = "--",
     min_samples = 10,
-    min_adjust_p = 0.5,
+    min_sample_ratio = 0.1,
+    min_adjust_p = 0.05,
     num_cores = 1,
     verbose = TRUE
   )
 
-  # Analyzing ligand-receptor projection scores: Cardiac -> Perivascular
+  # Analyzing ligand-receptor projection scores: Perivascular -> Endothelial
   result02s <- score_lr_single(
-    rna = seurat_object,
-    sender = "Cardiac",
-    receiver = "Perivascular",
+    rna = matrix_object,
+    sender = "Perivascular",
+    receiver = "Endothelial",
     filtered_lr = result01s,
-    sample_col = "sample",
-    cell_type_col = "cell.type",
-    min_cells = 20,
+    sample_col = 2,
+    cell_type_col = 1,
+    id_sep = "--",
     num_cores = 1,
     verbose = TRUE
   )
