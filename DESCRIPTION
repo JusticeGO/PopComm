@@ -17,6 +17,8 @@ Description: Facilitates population-level analysis of ligand-receptor (LR) inter
     with comprehensive visualization support to aid biological interpretation. 
     The methodology is described in a manuscript currently under review and will be 
     referenced here once published or publicly available.
+URL: https://github.com/JusticeGO/PopComm
+BugReports: https://github.com/JusticeGO/PopComm/issues
 biocViews:
 Depends:
     R (>= 4.1.0)
