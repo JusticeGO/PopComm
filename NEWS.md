@@ -24,3 +24,11 @@
 - Output now includes r_squared (`r2`) and f_statistic (`fstat`) for each linear regression model.
 - Models with R² below `min_r2` or F-statistic below `min_fstat` are excluded from results.
 - Enhances model screening based on goodness-of-fit and overall regression significance.
+
+
+## PopComm 1.0.0.0 (2025-08-12)
+
+### Changes in filter_lr_single(), filter_lr_all(), score_lr_single(), single_lr_all(), one_step_single(), one_step_all()
+
+- Added support for average expression matrices. These functions now accept either Seurat objects or average expression matrices (a numeric matrix of gene expression where columns encode cell types and samples, and rows are genes).
+- No changes to existing Seurat-based workflows.
