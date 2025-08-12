@@ -34,6 +34,12 @@ Nodes are arranged in a circle, and edge widths and colors represent interaction
 \examples{
 # Plot Circular Cell-Cell Interaction Network
 data(filtered_lr_eg)
-p <- circle_plot(filtered_lr_eg, edge_width = "count", show_self_interactions = TRUE)
+
+p <- circle_plot(
+  filtered_lr = filtered_lr_eg,
+  edge_width = "count",
+  show_self_interactions = TRUE
+)
+
 print(p)
 }

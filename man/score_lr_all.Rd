@@ -72,7 +72,7 @@ the normalized distance of each sample's LR expression from the origin of the re
     min_adjust_p = 0.05,
     num_cores = 1,
     verbose = TRUE
-  )
+    )
 
   # Analyzing ligand-receptor projection scores between all cell types
   result02a <- score_lr_all(
@@ -83,7 +83,7 @@ the normalized distance of each sample's LR expression from the origin of the re
     id_sep = "--",
     num_cores = 1,
     verbose = TRUE
-  )
+    )
 
   if (!is.null(result02a)) {
   print(head(result02a))

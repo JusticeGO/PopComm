@@ -116,7 +116,7 @@ average expression matrices (matrix of gene expression data with cell types and 
     min_adjust_p = 0.05,
     num_cores = 1,
     verbose = TRUE
-  )
+    )
 
   if (!is.null(res_single)) {
     print(head(res_single$res1))

@@ -72,7 +72,7 @@
 #'     min_adjust_p = 0.05,
 #'     num_cores = 1,
 #'     verbose = TRUE
-#'   )
+#'     )
 #'
 #'   if (!is.null(result01s)) {
 #'   print(head(result01s))
@@ -512,7 +512,7 @@ filter_lr_single <- function(rna, sender, receiver, lr_database = PopComm::lr_db
 #'     min_adjust_p = 0.05,
 #'     num_cores = 1,
 #'     verbose = TRUE
-#'   )
+#'     )
 #'
 #'   if (!is.null(result01a)) {
 #'   print(head(result01a))

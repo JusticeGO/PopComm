@@ -80,7 +80,7 @@ measuring the normalized distance of each sample's LR expression from the origin
     min_adjust_p = 0.05,
     num_cores = 1,
     verbose = TRUE
-  )
+    )
 
   # Analyzing ligand-receptor projection scores: Perivascular -> Endothelial
   result02s <- score_lr_single(
@@ -93,7 +93,7 @@ measuring the normalized distance of each sample's LR expression from the origin
     id_sep = "--",
     num_cores = 1,
     verbose = TRUE
-  )
+    )
 
   if (!is.null(result02s)) {
   print(head(result02s))

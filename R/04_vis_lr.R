@@ -29,7 +29,13 @@
 #' @examples
 #' # Plot Circular Cell-Cell Interaction Network
 #' data(filtered_lr_eg)
-#' p <- circle_plot(filtered_lr_eg, edge_width = "count", show_self_interactions = TRUE)
+#'
+#' p <- circle_plot(
+#'   filtered_lr = filtered_lr_eg,
+#'   edge_width = "count",
+#'   show_self_interactions = TRUE
+#' )
+#'
 #' print(p)
 circle_plot <- function(filtered_lr,
                         edge_width = c("count", "cor"),
@@ -261,7 +267,14 @@ circle_plot <- function(filtered_lr,
 #' @examples
 #' # Plot LR Interaction Dot Plot
 #' data(filtered_lr_eg)
-#' p <- dot_plot(filtered_lr_eg, axis = "LR-SR", type_scale = "size")
+#'
+#' p <- dot_plot(
+#'   filtered_lr = filtered_lr_eg,
+#'   top_n = 3,
+#'   axis = "LR-SR",
+#'   type_scale = "size",
+#'   )
+#'
 #' print(p)
 dot_plot <- function(filtered_lr,
                      top_n = 5,

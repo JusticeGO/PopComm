@@ -5,7 +5,7 @@
 \alias{filtered_lr_eg}
 \title{Example for filtered_lr}
 \format{
-An object of class \code{data.frame} with 5904 rows and 12 columns.
+An object of class \code{data.frame} with 1513 rows and 11 columns.
 }
 \usage{
 filtered_lr_eg

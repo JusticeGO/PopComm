@@ -5,7 +5,7 @@
 \alias{lr_scores_eg}
 \title{Example for lr_scores}
 \format{
-An object of class \code{data.frame} with 377006 rows and 15 columns.
+An object of class \code{data.frame} with 187593 rows and 14 columns.
 }
 \usage{
 lr_scores_eg

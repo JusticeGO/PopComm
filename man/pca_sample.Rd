@@ -41,8 +41,12 @@ and generates a scatter plot of the first two principal components. Optionally, 
 # PCA of LR Interaction Scores
 data(lr_scores_eg)
 data(metadata_eg)
-res <- pca_sample(lr_scores_eg, metadata_eg, selected_sender = "Cardiac",
-  selected_receiver = "Perivascular", color_by = "IFN_type")
+
+res <- pca_sample(
+  lr_scores = lr_scores_eg,
+  metadata = metadata_eg,
+  color_by = "IFN_type"
+  )
 
 print(res$plot)
 head(res$df)

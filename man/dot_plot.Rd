@@ -37,6 +37,13 @@ per sender-receiver pair or user-specified ligand-receptor pairs.
 \examples{
 # Plot LR Interaction Dot Plot
 data(filtered_lr_eg)
-p <- dot_plot(filtered_lr_eg, axis = "LR-SR", type_scale = "size")
+
+p <- dot_plot(
+  filtered_lr = filtered_lr_eg,
+  top_n = 3,
+  axis = "LR-SR",
+  type_scale = "size",
+  )
+
 print(p)
 }

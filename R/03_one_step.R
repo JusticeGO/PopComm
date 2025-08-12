@@ -78,7 +78,7 @@
 #'     min_adjust_p = 0.05,
 #'     num_cores = 1,
 #'     verbose = TRUE
-#'   )
+#'     )
 #'
 #'   if (!is.null(res_single)) {
 #'     print(head(res_single$res1))
@@ -597,7 +597,7 @@ one_step_single <- function(rna, sender, receiver, lr_database = PopComm::lr_db,
 #'     min_adjust_p = 0.05,
 #'     num_cores = 1,
 #'     verbose = TRUE
-#'   )
+#'     )
 #'
 #'   if (!is.null(res_all)) {
 #'     print(head(res_all$res1))

@@ -60,7 +60,7 @@
 #'     min_adjust_p = 0.05,
 #'     num_cores = 1,
 #'     verbose = TRUE
-#'   )
+#'     )
 #'
 #'   # Analyzing ligand-receptor projection scores: Perivascular -> Endothelial
 #'   result02s <- score_lr_single(
@@ -73,7 +73,7 @@
 #'     id_sep = "--",
 #'     num_cores = 1,
 #'     verbose = TRUE
-#'   )
+#'     )
 #'
 #'   if (!is.null(result02s)) {
 #'   print(head(result02s))
@@ -415,7 +415,7 @@ score_lr_single <- function(rna, sender, receiver, filtered_lr,
 #'     min_adjust_p = 0.05,
 #'     num_cores = 1,
 #'     verbose = TRUE
-#'   )
+#'     )
 #'
 #'   # Analyzing ligand-receptor projection scores between all cell types
 #'   result02a <- score_lr_all(
@@ -426,7 +426,7 @@ score_lr_single <- function(rna, sender, receiver, filtered_lr,
 #'     id_sep = "--",
 #'     num_cores = 1,
 #'     verbose = TRUE
-#'   )
+#'     )
 #'
 #'   if (!is.null(result02a)) {
 #'   print(head(result02a))

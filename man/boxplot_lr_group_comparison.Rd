@@ -62,12 +62,17 @@ with optional significance testing (t-test or Wilcoxon).
 # Boxplot of LR Score by group
 data(lr_scores_eg)
 data(metadata_eg)
+
 res <- boxplot_lr_group_comparison(
-  lr_scores_eg, metadata_eg,
-  ligand = "TAC4", receptor = "TACR1",
-  sender = "Perivascular", receiver = "Cardiac",
-  group_by = "IFN_type", score = "normalized"
-)
+  lr_scores = lr_scores_eg,
+  metadata = metadata_eg,
+  ligand = "PSAP",
+  receptor = "LRP1",
+  sender = "Perivascular",
+  receiver = "Fibroblast",
+  group_by = "IFN_type",
+  score = "normalized"
+  )
 
 print(res$plot)
 head(res$df)

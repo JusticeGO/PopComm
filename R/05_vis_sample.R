@@ -33,8 +33,16 @@
 #' # Heatmap of LR Interaction Scores
 #' data(lr_scores_eg)
 #' data(metadata_eg)
-#' p <- heatmap_sample(lr_scores_eg, metadata_eg, score = "normalized", selected_sender = "Cardiac",
-#'   selected_receiver = "Perivascular", selected_metadata = c("Sex", "Age_group", "IFN_type"))
+#'
+#' p <- heatmap_sample(
+#'   lr_scores = lr_scores_eg,
+#'   metadata = metadata_eg,
+#'   score = "normalized",
+#'   selected_sender = "Endothelial",
+#'   selected_receiver = "Perivascular",
+#'   selected_metadata = c("Sex", "Age_group", "IFN_type")
+#'   )
+#'
 #' print(p)
 heatmap_sample <- function(lr_scores,
                            metadata,
@@ -245,8 +253,12 @@ heatmap_sample <- function(lr_scores,
 #' # PCA of LR Interaction Scores
 #' data(lr_scores_eg)
 #' data(metadata_eg)
-#' res <- pca_sample(lr_scores_eg, metadata_eg, selected_sender = "Cardiac",
-#'   selected_receiver = "Perivascular", color_by = "IFN_type")
+#'
+#' res <- pca_sample(
+#'   lr_scores = lr_scores_eg,
+#'   metadata = metadata_eg,
+#'   color_by = "IFN_type"
+#'   )
 #'
 #' print(res$plot)
 #' head(res$df)
@@ -394,12 +406,17 @@ pca_sample <- function(lr_scores,
 #' # Boxplot of LR Score by group
 #' data(lr_scores_eg)
 #' data(metadata_eg)
+#'
 #' res <- boxplot_lr_group_comparison(
-#'   lr_scores_eg, metadata_eg,
-#'   ligand = "TAC4", receptor = "TACR1",
-#'   sender = "Perivascular", receiver = "Cardiac",
-#'   group_by = "IFN_type", score = "normalized"
-#' )
+#'   lr_scores = lr_scores_eg,
+#'   metadata = metadata_eg,
+#'   ligand = "PSAP",
+#'   receptor = "LRP1",
+#'   sender = "Perivascular",
+#'   receiver = "Fibroblast",
+#'   group_by = "IFN_type",
+#'   score = "normalized"
+#'   )
 #'
 #' print(res$plot)
 #' head(res$df)
@@ -538,10 +555,14 @@ boxplot_lr_group_comparison <- function(lr_scores, metadata,
 #' # Dotplot of LR Score Against Continuous Group Variable
 #' data(lr_scores_eg)
 #' data(metadata_eg)
+#'
 #' res <- dotplot_lr_continuous_group(
-#'   lr_scores_eg, metadata_eg,
-#'   ligand = "TAC4", receptor = "TACR1",
-#'   sender = "Perivascular", receiver = "Cardiac",
+#'   lr_scores = lr_scores_eg,
+#'   metadata = metadata_eg,
+#'   ligand = "HLA-A",
+#'   receptor = "LILRB2",
+#'   sender = "Lymphoid",
+#'   receiver = "Myeloid",
 #'   group_by = "IFNscore"
 #' )
 #'

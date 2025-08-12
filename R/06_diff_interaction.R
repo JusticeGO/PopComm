@@ -326,11 +326,13 @@ diff_lr_interaction <- function(lr_scores, metadata, group_by, ident1, ident2) {
 #'   data(metadata_eg)
 #'
 #'   res <- lr_linear_model_discrete(
-#'     lr_scores_eg, metadata_eg,
+#'     lr_scores = lr_scores_eg,
+#'     metadata = metadata_eg,
 #'     group_variable = "IFN_type",
 #'     ident1 = "high",
 #'     covariates = c("Age_group", "Sex")
 #'   )
+#'
 #'   head(res)
 #' }
 lr_linear_model_discrete <- function(lr_scores,

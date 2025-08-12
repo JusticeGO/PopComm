@@ -52,7 +52,15 @@ Rows represent LR pairs and columns represent samples. Optionally, sample metada
 # Heatmap of LR Interaction Scores
 data(lr_scores_eg)
 data(metadata_eg)
-p <- heatmap_sample(lr_scores_eg, metadata_eg, score = "normalized", selected_sender = "Cardiac",
-  selected_receiver = "Perivascular", selected_metadata = c("Sex", "Age_group", "IFN_type"))
+
+p <- heatmap_sample(
+  lr_scores = lr_scores_eg,
+  metadata = metadata_eg,
+  score = "normalized",
+  selected_sender = "Endothelial",
+  selected_receiver = "Perivascular",
+  selected_metadata = c("Sex", "Age_group", "IFN_type")
+  )
+
 print(p)
 }
