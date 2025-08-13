@@ -38,7 +38,6 @@ across groups, handling both continuous and binary group variables (ident1 vs id
 }
 \examples{
 \donttest{
-  # Long-running example (may take >10s)
   data(lr_scores_eg)
   data(metadata_eg)
 
@@ -48,7 +47,7 @@ across groups, handling both continuous and binary group variables (ident1 vs id
     group_variable = "IFN_type",
     ident1 = "high",
     covariates = c("Age_group", "Sex")
-  )
+    )
 
   head(res)
 }

@@ -321,7 +321,6 @@ diff_lr_interaction <- function(lr_scores, metadata, group_by, ident1, ident2) {
 #'
 #' @examples
 #' \donttest{
-#'   # Long-running example (may take >10s)
 #'   data(lr_scores_eg)
 #'   data(metadata_eg)
 #'
@@ -331,7 +330,7 @@ diff_lr_interaction <- function(lr_scores, metadata, group_by, ident1, ident2) {
 #'     group_variable = "IFN_type",
 #'     ident1 = "high",
 #'     covariates = c("Age_group", "Sex")
-#'   )
+#'     )
 #'
 #'   head(res)
 #' }

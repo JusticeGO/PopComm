@@ -33,6 +33,3 @@
 #' Example for matrix object
 "matrix_object"
 
-#' #' Example for seurat object
-#' "seurat_object"
-
