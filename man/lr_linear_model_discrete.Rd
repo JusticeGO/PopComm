@@ -30,7 +30,7 @@ lr_linear_model_discrete(
 \item{fdr_threshold}{Significance cutoff for adjusted p-values (numeric, default: 0.05).}
 }
 \value{
-Data frame with ligand, receptor, sender, receiver, coef (coefficient, logFC), p-values, and adjusted p-values.
+Data frame with ligand, receptor, sender, receiver, coef, p-values, and adjusted p-values.
 }
 \description{
 Perform linear regression analysis to compare ligand-receptor (LR) interaction scores

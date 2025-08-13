@@ -308,7 +308,7 @@ diff_lr_interaction <- function(lr_scores, metadata, group_by, ident1, ident2) {
 #' @param covariates Optional list of covariate column names (character vector).
 #' @param fdr_threshold Significance cutoff for adjusted p-values (numeric, default: 0.05).
 #'
-#' @return Data frame with ligand, receptor, sender, receiver, coef (coefficient, logFC), p-values, and adjusted p-values.
+#' @return Data frame with ligand, receptor, sender, receiver, coef, p-values, and adjusted p-values.
 #'
 #' @export
 #'
