@@ -1,4 +1,4 @@
-PopComm
+# PopComm
 ---
 
 <p align="center">
@@ -30,7 +30,7 @@ Both **R** and **Python** versions of **PopComm** are available, providing flexi
 
 ## Overview
 <p align="center">
-  ![Overview](https://github.com/JusticeGO/PopComm/blob/main/Overview_PopComm.png)
+  <img src="https://github.com/JusticeGO/PopComm/blob/main/Overview_PopComm.png" alt="Overview" style="max-width: 100%;">
 </p>
 
 PopComm includes three primary modules for analyzing and visualizing cell–cell communication:
