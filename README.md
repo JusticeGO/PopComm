@@ -134,8 +134,9 @@ data(lr_db)
 
 ### 1) LR filtering
 
+> Filter LR pairs and compute correlations for Perivascular -> Endothelial
+
 ```r
-# Filter LR pairs and compute correlations for Perivascular -> Endothelial
 filtered_lr <- filter_lr_single(
   rna             = matrix_object,
   sender          = "Perivascular",
@@ -176,8 +177,9 @@ head(filtered_lr)
 
 ### 2) Sample-level scoring
 
+> Compute per-sample LR projection scores using the filtered pairs
+
 ```r
-# Compute per-sample LR projection scores using the filtered pairs
 lr_scores <- score_lr_single(
   rna            = matrix_object,
   sender         = "Perivascular",
@@ -211,8 +213,9 @@ head(lr_scores)
 
 ### 3) One-step integrated analysis (optional)
 
+> Run filtering + scoring in one call
+
 ```r
-# Run filtering + scoring in one call
 res_single <- one_step_single(
   rna             = matrix_object,
   sender          = "Perivascular",
@@ -261,9 +264,9 @@ data(metadata_eg)
 
 #### `circle_plot`
 
+> Plots a circular LR interaction network with curved directed edges. Nodes are arranged in a circle, and edge widths and colors represent interaction strengths.
+
 ```r
-# Plots a circular LR interaction network with curved directed edges. 
-# Nodes are arranged in a circle, and edge widths and colors represent interaction strengths.
 p_net <- circle_plot(
   filtered_lr = filtered_lr_eg,
   edge_width = "count",          # <character> one of c("count", "cor")
@@ -277,10 +280,9 @@ print(p_net)
 
 #### `dot_plot`
 
+> This function generates a dot plot to visualize LR interaction. Dot sizes are scaled by the correlation coefficient and dot colors represent -log10(adjust.p). The function supports plotting the top interactions per sender-receiver pair or user-specified LR pairs.
+
 ```r
-# This function generates a dot plot to visualize LR interaction. 
-# Dot sizes are scaled by the correlation coefficient and dot colors represent -log10(adjust.p). 
-# The function supports plotting the top interactions per sender-receiver pair or user-specified LR pairs.
 p_dot <- dot_plot(
   filtered_lr = filtered_lr_eg,
   top_n = 5,
@@ -296,9 +298,9 @@ print(p_dot)
 
 #### `heatmap_sample`
 
+> This function generates a heatmap to visualize the LR interaction scores across samples. Rows represent LR pairs and columns represent samples. Optionally, sample metadata can be used to annotate the columns.
+
 ```r
-# This function generates a heatmap to visualize the LR interaction scores across samples. 
-# Rows represent LR pairs and columns represent samples. Optionally, sample metadata can be used to annotate the columns.
 p_hm <- heatmap_sample(
   lr_scores = lr_scores_eg,
   metadata = metadata_eg,
@@ -318,9 +320,9 @@ print(p_hm)
 
 #### `pca_sample`
 
+> This function performs principal component analysis (PCA) on LR interaction scores across samples, and generates a scatter plot of the first two principal components. Optionally, sample metadata can be used to color the points.
+
 ```r
-# This function performs principal component analysis (PCA) on LR interaction scores across samples, 
-# and generates a scatter plot of the first two principal components. Optionally, sample metadata can be used to color the points.
 pca_res <- pca_sample(
   lr_scores = lr_scores_eg,
   metadata = metadata_eg,
@@ -338,9 +340,9 @@ head(pca_res$df)
 
 #### `boxplot_lr_group_comparison` (discrete variable)
 
+> This function generates a boxplot comparing LR interaction scores across sample groups with optional significance testing (t-test or Wilcoxon).
+
 ```r
-# This function generates a boxplot comparing LR interaction scores across sample groups 
-# with optional significance testing (t-test or Wilcoxon).
 p_box <- boxplot_lr_group_comparison(
   lr_scores = lr_scores_eg,
   metadata = metadata_eg,
@@ -363,9 +365,9 @@ head(p_box$df)
 
 #### `dotplot_lr_continuous_group` (continuous variable)
 
+> This function creates a dotplot (scatter plot) of LR interaction scores against a continuous variable with optional regression line.
+
 ```r
-# This function creates a dotplot (scatter plot) of LR interaction scores against a continuous variable 
-# with optional regression line.
 p_scatter <- dotplot_lr_continuous_group(
   lr_scores = lr_scores_eg,
   metadata = metadata_eg,
@@ -429,13 +431,13 @@ PopComm supports using curated LR tables. This package uses the **CellTalkDB** r
 ## FAQ
 
 **Q1. What advantages does PopComm offer over single-sample communication tools?**
-It focuses on **population-scale robustness** and **sample-level** scoring, allowing rigorous statistical associations with phenotypes (e.g., age, disease, continuous traits) and powering discoveries that are consistent across many samples.
+- It focuses on **population-scale robustness** and **sample-level** scoring, allowing rigorous statistical associations with phenotypes (e.g., age, disease, continuous traits) and powering discoveries that are consistent across many samples.
 
 **Q2. Can I analyze a specific sender–receiver pair only?**
-Yes. Filter and score modules can be restricted to selected cell-type pairs to reduce computation and enhance interpretability.
+- Yes. Filter and score modules can be restricted to selected cell-type pairs to reduce computation and enhance interpretability.
 
 **Q3. Does PopComm work with non-human data?**
-Yes. Use an LR table appropriate for your organism (or map orthologs to the species in your expression data) and ensure gene identifiers are consistent.
+- Yes. Use an LR table appropriate for your organism (or map orthologs to the species in your expression data) and ensure gene identifiers are consistent.
 
 
 ## Cite PopComm & Resources
