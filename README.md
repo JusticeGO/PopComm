@@ -22,10 +22,9 @@
   <img  src="https://img.shields.io/github/license/JusticeGO/PopComm" alt="GitHub License">
 </p>
 
-**PopComm** (*Population-Level Cell–Cell Communication Analysis Tools*) is a computational framework designed to quantify **sample-level** ligand–receptor (LR)–mediated cell–cell communication from human large-scale single-cell and single-nucleus RNA-seq datasets.  
-It infers LR interactions between sender/receiver cell types, computes **per-sample communication strength**, and supports association with phenotypes (e.g., aging, disease) as well as comprehensive visualization.
+**PopComm** (*Population-Level Cell–Cell Communication Analysis Tools*) is a computational framework designed to quantify **sample-level** ligand–receptor (LR)–mediated cell–cell communication from human large-scale single-cell and single-nucleus RNA-seq datasets. It infers LR interactions between sender/receiver cell types, computes **per-sample communication strength**, and supports association with phenotypes (e.g., aging, disease) as well as comprehensive visualization.
 
-> PopComm is available in **R** and **Python** for users who prefer either ecosystem.
+> PopComm is available in **R** and **Python**. It uses a **human** LR database by default, but users can easily swap it for a species-specific database (e.g., mouse) to suit their research needs.
 
 
 ## Overview
@@ -33,20 +32,22 @@ It infers LR interactions between sender/receiver cell types, computes **per-sam
   <img src="https://github.com/JusticeGO/PopComm/blob/main/Overview_PopComm.png" alt="Overview" style="max-width: 100%;">
 </p>
 
-PopComm provides three primary modules for population-scale communication analysis:
+PopComm provides three primary modules for population-scale cell–cell communication analysis:
 
 1. **LR Filtering Module**:
    - Identifies expressed ligand–receptor pairs (LR pairs) between sender and receiver cell types, using expression thresholds and cross-sample robustness criteria (e.g., correlation or model-based evidence).
    - Can operate on specific cell-type pairs or all combinations in the dataset.
 2. **LR Scoring Module**:
    - Quantifies sample-level communication intensity using a projection-based scoring approach, enabling downstream comparisons across phenotypes (categorical or continuous).
+   - Can operate on specific cell-type pairs or all combinations in the dataset.
 3. **Visualization Module**:
-   - Built-in visualizations to interpret LR interactions at both the cell-type and sample levels:
-     - Circular network diagrams
-     - Dot plots
-     - Heatmaps
-     - PCA projections
-     - Box/violin plots for group-wise comparisons
+   - Built-in visualizations to interpret LR interactions at both the LR and sample levels:
+     - Circular network diagrams — Summarize cell–cell communication; edges encode interaction count/strength and node size reflects activity.
+     - Dot plots — Rank top ligand–receptor pairs per sender–receiver; dot size shows significance and color the correlation/score.
+     - Heatmaps — Show sample-wise LR interaction scores, with optional metadata tracks to highlight phenotypes and patterns.
+     - PCA projections — Project sample LR scores into 2D to reveal clustering or separation aligned with metadata.
+     - Boxplot (group comparison) — Compare LR scores between discrete groups (e.g., High vs Low) and report test statistics.
+     - Dotplot (continuous variable) — Scatter LR scores vs a continuous covariate (e.g., IFNscore); add a fit and show R²/p-value.
 
 
 ## Installation
@@ -60,7 +61,7 @@ Install the **PopComm** R package from CRAN (stable) or GitHub (development vers
 install.packages("PopComm")
 
 # Development version (GitHub - Windows/macOS/Linux)
-# install.packages("devtools")  # If not already installed
+# install.packages("devtools")      # If not already installed
 devtools::install_github("JusticeGO/PopComm")
 ```
 
@@ -76,10 +77,10 @@ pip install PopComm
 
 ## Data Requirements
 
-Prepare single-cell or single-nucleus RNA-seq data plus an LR table. PopComm works in **Seurat mode** or **Matrix mode**.
+Prepare single-cell or single-nucleus RNA-seq data plus an LR database table. PopComm works in **Seurat mode** or **Matrix mode**.
 
 ### Core inputs
-- **`rna`**: A **Seurat** object (v4+) **or** a **matrix** of scRNA expression.
+- **`rna`**: A **Seurat** object (v4+) **or** a **matrix** of scRNA/snRNA-seq expression.
 - **`lr_database`**: A data.frame with columns **`ligand_gene_symbol`** and **`receptor_gene_symbol`**.
 - **`sender`** and **`receiver`** (Optional): Cell type designated as the **ligand** sender and the **receptor** receiver.
 > **Gene identifiers**: Must match the LR database (e.g., **HGNC** for human, **MGI** for mouse); keep naming/case consistent.
@@ -102,20 +103,19 @@ Prepare single-cell or single-nucleus RNA-seq data plus an LR table. PopComm wor
     (e.g., for `"Cardiomyocyte--sample_01"`, use `cell_type_col=1`, `sample_col=2`).
 - **Note**: `min_cells` and `min_cell_ratio` apply to Seurat mode, not Matrix mode.
 
-### Filtering / statistics knobs (set in the function call)
+### Filtering and statistical criteria (set in the function call)
 - **`min_samples`**: minimum valid samples to proceed.  
 - **`min_sample_ratio`**: fraction of samples where both ligand and receptor are expressed.  
 - **`cor_method`**: `"spearman"` (default), `"pearson"`, or `"kendall"`.  
 - **`adjust_method`**: multiple-testing correction (default `"BH"`).  
 - **`min_adjust_p`**: adjusted p-value cutoff.  
-- **`min_cor`**, **`min_r2`**, **`min_fstat`**: optional gates on correlation and regression quality.  
+- **`min_cor`**, **`min_r2`**, **`min_fstat`**: optional thresholds on correlation and regression quality.  
 - **`num_cores`**: CPU cores for parallelization. Automatically capped at max(1, {system_cores} - 1) if overspecified.
 - **`verbose`**: progress messages.
 
 ### Metadata for plotting / association
-- A **data.frame** with:
-  - a **`sample`** column matching the sample IDs used above, and
-  - one or more **variables to analyze** (e.g., age, disease status) used by plotting/stats functions.
+- A **data.frame** with: a **`sample`** column matching the sample IDs used above.
+- One or more **variables to analyze** (e.g., age, disease status) used by plotting/stats functions.
 
 
 ## Quick Start (R)
@@ -128,10 +128,8 @@ Example below uses **Perivascular → Endothelial** in **Matrix mode**.
 # Load package and example data
 library(PopComm)
 
-data(matrix_object)  # example column name: "Endothelial--sample01"
+data(matrix_object)      # example column name: "Endothelial--sample01"
 data(lr_db)
-rna <- matrix_object
-lr_db <- lr_db
 ```
 
 ### 1) LR filtering
@@ -139,12 +137,12 @@ lr_db <- lr_db
 ```r
 # Filter LR pairs and compute correlations for Perivascular -> Endothelial
 filtered_lr <- filter_lr_single(
-  rna             = rna,
+  rna             = matrix_object,
   sender          = "Perivascular",
   receiver        = "Endothelial",
   lr_database     = lr_db,
-  sample_col      = 2,      # after splitting colnames by id_sep, sample is part 2
-  cell_type_col   = 1,      # cell type is part 1
+  cell_type_col   = 1,      # after splitting colnames by id_sep, cell type is part 1
+  sample_col      = 2,      # sample is part 2
   id_sep          = "--",
   min_samples     = 10,
   min_sample_ratio= 0.1,
@@ -166,12 +164,14 @@ head(filtered_lr)
 ```
 
 > If you don’t specify a `sender` and `receiver`, use `filter_lr_all()` to analyze **all** sender–receiver combinations.
+
 >  **Output (`filtered_lr`)**
 >
-> - `ligand`, `receptor` — Ligand and receptor gene symbols
+> - `ligand`, `receptor` — ligand and receptor gene symbols
 > - `cor`, `p_val`, `adjust.p` — correlation and p-values
-> - `sender`, `receiver` — Sender and receiver cell types
+> - `sender`, `receiver` — sender and receiver cell types
 > - `slope`, `intercept`, `r2`, `fstat` — regression metrics
+
 >    *Rows are ordered by ascending `adjust.p` and then descending `cor`.*
 
 ### 2) Sample-level scoring
@@ -179,12 +179,12 @@ head(filtered_lr)
 ```r
 # Compute per-sample LR projection scores using the filtered pairs
 lr_scores <- score_lr_single(
-  rna            = rna,
+  rna            = matrix_object,
   sender         = "Perivascular",
   receiver       = "Endothelial",
   filtered_lr    = filtered_lr,
-  sample_col     = 2,
   cell_type_col  = 1,
+  sample_col     = 2,
   id_sep         = "--",
   num_cores      = 10,
   verbose        = TRUE
@@ -198,12 +198,14 @@ head(lr_scores)
 ```
 
 > If you used `filter_lr_all()` in the previous step, use `score_lr_all()` here.
+
 >  **Output (`lr_scores`)**
 >
 > - Inherits key columns from `filtered_lr` (ligand/receptor/sender/receiver, etc.)
 > - `sample` — sample identifier
 > - `score` — raw projection score
 > - `normalized_score` — 0–1 scaled score
+
 >    *Rows are ordered by the `filtered_lr` keys and descending `score`.*
 
 
@@ -212,12 +214,12 @@ head(lr_scores)
 ```r
 # Run filtering + scoring in one call
 res_single <- one_step_single(
-  rna             = rna,
+  rna             = matrix_object,
   sender          = "Perivascular",
   receiver        = "Endothelial",
   lr_database     = lr_db,
-  sample_col      = 2,
   cell_type_col   = 1,
+  sample_col      = 2,
   id_sep          = "--",
   min_samples     = 10,
   min_sample_ratio= 0.1,
@@ -234,7 +236,7 @@ if (!is.null(res_single)) {
 ```
 
 > For all sender–receiver combinations, use `one_step_all()`.
->  Returns two data frames: `res1` (LR statistics) and `res2` (per-sample scores). Returns `NULL` if required cell types/samples are missing or no LR pairs pass thresholds.
+> Returns two data frames: `res1` (LR statistics) and `res2` (per-sample scores). Returns `NULL` if required cell types/samples are missing or no LR pairs pass thresholds.
 
 ------
 
@@ -253,9 +255,6 @@ library(PopComm)
 data(filtered_lr_eg)
 data(lr_scores_eg)
 data(metadata_eg)
-filtered_lr <- filtered_lr_eg
-lr_scores <- lr_scores_eg
-metadata <- metadata_eg
 ```
 
 ### 1) LR filtering views
@@ -263,9 +262,10 @@ metadata <- metadata_eg
 #### `circle_plot`
 
 ```r
-# Plots a circular ligand-receptor (LR) interaction network with curved directed edges. Nodes are arranged in a circle, and edge widths and colors represent interaction strengths.
+# Plots a circular LR interaction network with curved directed edges. 
+# Nodes are arranged in a circle, and edge widths and colors represent interaction strengths.
 p_net <- circle_plot(
-  filtered_lr = filtered_lr,
+  filtered_lr = filtered_lr_eg,
   edge_width = "count",          # <character> one of c("count", "cor")
   node_colors = NULL,
   show_self_interactions = TRUE,
@@ -278,9 +278,11 @@ print(p_net)
 #### `dot_plot`
 
 ```r
-# Generates a dot plot to visualize ligand-receptor (LR) interaction. Dot sizes are scaled by the correlation coefficient and dot colors represent -log10(adjust.p). The function supports plotting the top interactions per sender-receiver pair or user-specified ligand-receptor pairs.
+# This function generates a dot plot to visualize LR interaction. 
+# Dot sizes are scaled by the correlation coefficient and dot colors represent -log10(adjust.p). 
+# The function supports plotting the top interactions per sender-receiver pair or user-specified LR pairs.
 p_dot <- dot_plot(
-  filtered_lr = filtered_lr,
+  filtered_lr = filtered_lr_eg,
   top_n = 5,
   axis ="LR-SR",                 # <character> one of c("LR-SR", "SR-LR")
   type_scale = "size",           # <character> one of c("size", "radius")
@@ -295,10 +297,11 @@ print(p_dot)
 #### `heatmap_sample`
 
 ```r
-# This function generates a heatmap to visualize the ligand-receptor (LR) interaction scores across samples. Rows represent LR pairs and columns represent samples. Optionally, sample metadata can be used to annotate the columns.
+# This function generates a heatmap to visualize the LR interaction scores across samples. 
+# Rows represent LR pairs and columns represent samples. Optionally, sample metadata can be used to annotate the columns.
 p_hm <- heatmap_sample(
-  lr_scores = lr_scores,
-  metadata = metadata,
+  lr_scores = lr_scores_eg,
+  metadata = metadata_eg,
   score = "normalized",          # <character> one of c("normalized", "raw")
   selected_sender   = "Endothelial",
   selected_receiver = "Perivascular",
@@ -316,10 +319,11 @@ print(p_hm)
 #### `pca_sample`
 
 ```r
-This function performs principal component analysis (PCA) on ligand-receptor (LR) interaction scores across samples, and generates a scatter plot of the first two principal components. Optionally, sample metadata can be used to color the points.
+# This function performs principal component analysis (PCA) on LR interaction scores across samples, 
+# and generates a scatter plot of the first two principal components. Optionally, sample metadata can be used to color the points.
 pca_res <- pca_sample(
-  lr_scores = lr_scores,
-  metadata = metadata,
+  lr_scores = lr_scores_eg,
+  metadata = metadata_eg,
   selected_sender   = NULL,
   selected_receiver = NULL,
   color_by = "IFN_type",
@@ -335,11 +339,11 @@ head(pca_res$df)
 #### `boxplot_lr_group_comparison` (discrete variable)
 
 ```r
-# Generates a boxplot comparing LR (ligand-receptor) interaction scores across sample groups. with optional significance testing (t-test or Wilcoxon).
-
+# This function generates a boxplot comparing LR interaction scores across sample groups 
+# with optional significance testing (t-test or Wilcoxon).
 p_box <- boxplot_lr_group_comparison(
-  lr_scores = lr_scores,
-  metadata = metadata,
+  lr_scores = lr_scores_eg,
+  metadata = metadata_eg,
   ligand = "PSAP",
   receptor = "LRP1",
   sender = "Perivascular",
@@ -360,10 +364,11 @@ head(p_box$df)
 #### `dotplot_lr_continuous_group` (continuous variable)
 
 ```r
-# Creates a dotplot (scatter plot) of LR interaction scores against a continuous variable with optional regression line.
+# This function creates a dotplot (scatter plot) of LR interaction scores against a continuous variable 
+# with optional regression line.
 p_scatter <- dotplot_lr_continuous_group(
-  lr_scores = lr_scores,
-  metadata = metadata,
+  lr_scores = lr_scores_eg,
+  metadata = metadata_eg,
   ligand = "HLA-A",
   receptor = "LILRB2",
   sender = "Lymphoid",
@@ -396,17 +401,15 @@ head(p_scatter$df)
 PopComm supports using curated LR tables. This package uses the **CellTalkDB** resource as the LR database for human (and optionally mouse) ligand–receptor interactions.
 
 - **How PopComm uses it**
-   The LR database provides high-confidence ligand–receptor pairs. PopComm leverages these pairs to (i) filter for plausible interactions between sender and receiver cell types and (ii) quantify sample-level communication scores based on those pairs.
+  - The LR database provides high-confidence ligand–receptor pairs. PopComm leverages these pairs to (i) filter for plausible interactions between sender and receiver cell types and (ii) quantify sample-level communication scores based on those pairs.
 - **Citing [CellTalkDB](https://xomics.com.cn/celltalkdb/index.php)**
-   Please cite the CellTalkDB paper in any publication using PopComm with this database:
+  - Please cite the CellTalkDB paper in any publication using PopComm with this database:
    **Shao X., Liao J., Li C., et al.** *[CellTalkDB: A manually curated database of ligand-receptor interactions in human and mouse](https://academic.oup.com/bib/article/22/4/bbaa269/5955941)*. **Briefings in Bioinformatics** (2021).
 - **Swapping the LR database**
    You can use a custom LR table:
   1. Provide a `data.frame`/table with at least two columns: `ligand_gene_symbol` and `receptor_gene_symbol`.
   2. Ensure gene identifiers match your Seurat object or expression matrix (e.g., gene symbols).
   3. Pass your table to the argument `lr_database`.
-
-> If you bundle an LR table derived from CellTalkDB with your repo, please keep a clear attribution note and include the CellTalkDB citation in your docs.
 
 
 ## Performance & Reproducibility
@@ -426,13 +429,13 @@ PopComm supports using curated LR tables. This package uses the **CellTalkDB** r
 ## FAQ
 
 **Q1. What advantages does PopComm offer over single-sample communication tools?**
- It focuses on **population-scale robustness** and **sample-level** scoring, allowing rigorous statistical associations with phenotypes (e.g., age, disease, continuous traits) and powering discoveries that are consistent across many samples.
+It focuses on **population-scale robustness** and **sample-level** scoring, allowing rigorous statistical associations with phenotypes (e.g., age, disease, continuous traits) and powering discoveries that are consistent across many samples.
 
 **Q2. Can I analyze a specific sender–receiver pair only?**
- Yes. Filter and score modules can be restricted to selected cell-type pairs to reduce computation and enhance interpretability.
+Yes. Filter and score modules can be restricted to selected cell-type pairs to reduce computation and enhance interpretability.
 
 **Q3. Does PopComm work with non-human data?**
- Yes. Use an LR table appropriate for your organism (or map orthologs to the species in your expression data) and ensure gene identifiers are consistent.
+Yes. Use an LR table appropriate for your organism (or map orthologs to the species in your expression data) and ensure gene identifiers are consistent.
 
 
 ## Cite PopComm & Resources

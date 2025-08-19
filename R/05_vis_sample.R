@@ -372,7 +372,7 @@ pca_sample <- function(lr_scores,
 #' Boxplot Comparison of Ligand-Receptor Interaction Scores Across Groups
 #'
 #' @description
-#' Generates  a boxplot comparing LR (ligand-receptor) interaction scores across sample groups.
+#' Generates  a boxplot comparing ligand-receptor (LR) interaction scores across sample groups
 #' with optional significance testing (t-test or Wilcoxon).
 #'
 #' @param lr_scores Data frame containing LR interaction scores per sample (data frame).
@@ -521,7 +521,7 @@ boxplot_lr_group_comparison <- function(lr_scores, metadata,
 #' Dotplot of Ligand-Receptor Interaction Scores Against Continuous Group Variable
 #'
 #' @description
-#' Creates a dotplot (scatter plot) of LR interaction scores against a continuous variable
+#' Creates a dotplot (scatter plot) of ligand-receptor (LR) interaction scores against a continuous variable
 #' with optional regression line.
 #'
 #' @param lr_scores Data frame containing LR interaction scores per sample (data frame).
