@@ -400,14 +400,14 @@ head(p_scatter$df)
 
 ## LR Database: CellTalkDB
 
-PopComm supports using curated LR tables. This package uses the **CellTalkDB** resource as the LR database for human (and optionally mouse) ligand–receptor interactions.
+PopComm supports using curated LR tables. This package uses the **CellTalkDB** resource as the default LR database for human (and optionally mouse) LR interactions.
 
-- **How PopComm uses it**
+- **How PopComm uses it:**
   - The LR database provides high-confidence ligand–receptor pairs. PopComm leverages these pairs to (i) filter for plausible interactions between sender and receiver cell types and (ii) quantify sample-level communication scores based on those pairs.
-- **Citing [CellTalkDB](https://xomics.com.cn/celltalkdb/index.php)**
-  - Please cite the CellTalkDB paper in any publication using PopComm with this database:
-   **Shao X., Liao J., Li C., et al.** *[CellTalkDB: A manually curated database of ligand-receptor interactions in human and mouse](https://academic.oup.com/bib/article/22/4/bbaa269/5955941)*. **Briefings in Bioinformatics** (2021).
-- **Swapping the LR database**
+- **Citing [CellTalkDB](https://xomics.com.cn/celltalkdb/index.php):**
+  - Please cite the CellTalkDB paper in any publication using PopComm that uses this database as the default:
+  - **Shao X., Liao J., Li C., et al.** *[CellTalkDB: A manually curated database of ligand-receptor interactions in human and mouse](https://academic.oup.com/bib/article/22/4/bbaa269/5955941)*. **Briefings in Bioinformatics** (2021).
+- **Swapping the LR database:**
    You can use a custom LR table:
   1. Provide a `data.frame`/table with at least two columns: `ligand_gene_symbol` and `receptor_gene_symbol`.
   2. Ensure gene identifiers match your Seurat object or expression matrix (e.g., gene symbols).
@@ -440,15 +440,14 @@ PopComm supports using curated LR tables. This package uses the **CellTalkDB** r
 - Yes. Use an LR table appropriate for your organism (or map orthologs to the species in your expression data) and ensure gene identifiers are consistent.
 
 
-## Cite PopComm & Resources
-
-If PopComm or the included LR resources contribute to your work, please cite:
+## Cite PopComm & Database Resources
 
 **PopComm:**
  *A Population-Scale Single-Cell Atlas of the Human Heart Reveals Cellular Remodeling in Aging and Disease and Enables Cell–Cell Communication Analysis via PopComm.*
  (Add authors, journal, year, and DOI once available.)
 
-**[CellTalkDB](https://xomics.com.cn/celltalkdb/index.php):**
+**Database Source:**
+We thanks the CellTalk Database developed by Professor Xiaohui Fan. If you use the default LR database in PopComm, please also cite the orignal paper of [CellTalkDB](https://xomics.com.cn/celltalkdb/index.php):
  **Shao X., Liao J., Li C., et al.** *[CellTalkDB: A manually curated database of ligand-receptor interactions in human and mouse](https://academic.oup.com/bib/article/22/4/bbaa269/5955941)*. **Briefings in Bioinformatics** (2021).
 
  
