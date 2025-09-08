@@ -447,7 +447,7 @@ PopComm supports using curated LR tables. This package uses the **CellTalkDB** r
  (Add authors, journal, year, and DOI once available.)
 
 **Database Source:**
-We thanks the CellTalk Database developed by Professor Xiaohui Fan. If you use the default LR database in PopComm, please also cite the orignal paper of [CellTalkDB](https://xomics.com.cn/celltalkdb/index.php):
+We thanks the CellTalk Database developed by Professor Xiaohui Fan. If you use the default LR database in PopComm, please also cite the orignal paper of [CellTalkDB](https://xomics.com.cn/celltalkdb/index.php): 
  **Shao X., Liao J., Li C., et al.** *[CellTalkDB: A manually curated database of ligand-receptor interactions in human and mouse](https://academic.oup.com/bib/article/22/4/bbaa269/5955941)*. **Briefings in Bioinformatics** (2021).
 
  
