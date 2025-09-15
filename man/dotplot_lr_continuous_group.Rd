@@ -52,7 +52,7 @@ A list containing:
 }
 }
 \description{
-Creates a dotplot (scatter plot) of LR interaction scores against a continuous variable
+Creates a dotplot (scatter plot) of ligand-receptor (LR) interaction scores against a continuous variable
 with optional regression line.
 }
 \examples{

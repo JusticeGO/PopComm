@@ -81,7 +81,7 @@ Prepare single-cell or single-nucleus RNA-seq data plus an LR database table. Po
 
 ### Core inputs
 - **`rna`**: A **Seurat** object (v4+) **or** a **matrix** of scRNA/snRNA-seq expression.
-- **`lr_database`**: A data.frame with columns **`ligand_gene_symbol`** and **`receptor_gene_symbol`**.
+- **`lr_database`**: A `data.frame` with columns **`ligand_gene_symbol`** and **`receptor_gene_symbol`**.
 - **`sender`** and **`receiver`** (Optional): Cell type designated as the **ligand** sender and the **receptor** receiver.
 > **Gene identifiers**: Must match the LR database (e.g., **HGNC** for human, **MGI** for mouse); keep naming/case consistent.
 
@@ -409,7 +409,7 @@ PopComm supports using curated LR tables. This package uses the **CellTalkDB** r
   - **Shao X., Liao J., Li C., et al.** *[CellTalkDB: A manually curated database of ligand-receptor interactions in human and mouse](https://academic.oup.com/bib/article/22/4/bbaa269/5955941)*. **Briefings in Bioinformatics** (2021).
 - **Swapping the LR database:**
    You can use a custom LR table:
-  1. Provide a `data.frame`/table with at least two columns: `ligand_gene_symbol` and `receptor_gene_symbol`.
+  1. Provide a `data.frame`/`table` with at least two columns: `ligand_gene_symbol` and `receptor_gene_symbol`.
   2. Ensure gene identifiers match your Seurat object or expression matrix (e.g., gene symbols).
   3. Pass your table to the argument `lr_database`.
 

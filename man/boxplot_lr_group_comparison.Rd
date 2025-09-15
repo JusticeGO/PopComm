@@ -55,7 +55,7 @@ A list containing:
 }
 }
 \description{
-Generates  a boxplot comparing LR (ligand-receptor) interaction scores across sample groups.
+Generates  a boxplot comparing ligand-receptor (LR) interaction scores across sample groups
 with optional significance testing (t-test or Wilcoxon).
 }
 \examples{
