@@ -1,6 +1,6 @@
 # PopComm Change Logs
 
-## PopComm 0.1.1.0 (2025-07-15)
+## Version 0.1.1.0 (2025-07-15)
 
 ### Changes in circle_plot()
 
@@ -9,14 +9,11 @@
 - For `igraph >= 2.1.5`, loop angles are handled automatically by `igraph`; added logic to suppress or delete self-loops when disabled.
 - Added internal version check using `utils::packageVersion()` to differentiate logic paths and ensure backward compatibility.
 - Removed direct assignment to `E(g)$loop.angle` for new `igraph` versions, which now throw errors with incorrect defaults.
-
-### Miscellaneous
-
 - Added `@importFrom utils packageVersion` directive to support version checking.
 - Improved robustness of layout-based self-loop rendering.
 
 
-## PopComm 0.1.2.0 (2025-07-29)
+## Version 0.1.2.0 (2025-07-29)
 
 ### Changes in filter_lr_single(), filter_lr_all(), one_step_single(), one_step_all()
 
@@ -26,7 +23,7 @@
 - Enhances model screening based on goodness-of-fit and overall regression significance.
 
 
-## PopComm 1.0.0.0 (2025-08-12)
+## Version 1.0.0.0 (2025-08-12)
 
 ### Changes in filter_lr_single(), filter_lr_all(), score_lr_single(), single_lr_all(), one_step_single(), one_step_all()
 
