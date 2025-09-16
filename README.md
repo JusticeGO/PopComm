@@ -119,7 +119,7 @@ Prepare single-cell or single-nucleus RNA-seq data plus an LR database table. Po
 
 
 ## Quick Start (R)
-See the [CRAN reference manual](https://cran.r-project.org/web/packages/PopComm/refman/PopComm.html) for full details.
+See the [CRAN reference manual](https://CRAN.R-project.org/package=PopComm) for full details.
 Example below uses **Perivascular → Endothelial** in **Matrix mode**.
 
 ### Data preparation
@@ -406,7 +406,7 @@ PopComm supports using curated LR tables. This package uses the **CellTalkDB** r
   - The LR database provides high-confidence ligand–receptor pairs. PopComm leverages these pairs to (i) filter for plausible interactions between sender and receiver cell types and (ii) quantify sample-level communication scores based on those pairs.
 - **Citing [CellTalkDB](https://xomics.com.cn/celltalkdb/index.php):**
   - Please cite the CellTalkDB paper in any publication using PopComm that uses this database as the default:
-  - **Shao X., Liao J., Li C., et al.** *[CellTalkDB: A manually curated database of ligand-receptor interactions in human and mouse](https://academic.oup.com/bib/article/22/4/bbaa269/5955941)*. **Briefings in Bioinformatics** (2021).
+  - **Shao X., Liao J., Li C., et al.** *[CellTalkDB: A manually curated database of ligand-receptor interactions in human and mouse](https://pubmed.ncbi.nlm.nih.gov/33147626/)*. **Briefings in Bioinformatics** (2021).
 - **Swapping the LR database:**
    You can use a custom LR table:
   1. Provide a `data.frame`/`table` with at least two columns: `ligand_gene_symbol` and `receptor_gene_symbol`.
@@ -448,7 +448,7 @@ PopComm supports using curated LR tables. This package uses the **CellTalkDB** r
 
 **Database Source:**
 We thanks the CellTalk Database developed by Professor Xiaohui Fan. If you use the default LR database in PopComm, please also cite the orignal paper of [CellTalkDB](https://xomics.com.cn/celltalkdb/index.php): 
- **Shao X., Liao J., Li C., et al.** *[CellTalkDB: A manually curated database of ligand-receptor interactions in human and mouse](https://academic.oup.com/bib/article/22/4/bbaa269/5955941)*. **Briefings in Bioinformatics** (2021).
+ **Shao X., Liao J., Li C., et al.** *[CellTalkDB: A manually curated database of ligand-receptor interactions in human and mouse](https://pubmed.ncbi.nlm.nih.gov/33147626/)*. **Briefings in Bioinformatics** (2021).
 
  
 ## License
