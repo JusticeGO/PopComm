@@ -17,9 +17,7 @@
     <img src="https://img.shields.io/github/v/release/JusticeGO/PopComm?color=blue&label=Github&logo=Github" alt="GitHub Version" />
   </a>
   <a href="https://github.com/JusticeGO/PopComm">
-    <img src="https://img.shields.io/github/downloads/JusticeGO/PopComm/total?color=green" alt="GitHub Downloads" />
-  </a>
-  <img  src="https://img.shields.io/github/license/JusticeGO/PopComm" alt="GitHub License">
+    <img src="https://img.shields.io/github/downloads/JusticeGO/PopComm/total?color=green" alt="GitHub Downloads" >
 </p>
 
 **PopComm** (*Population-Level Cell–Cell Communication Analysis Tools*) is a computational framework designed to quantify **sample-level** ligand–receptor (LR)–mediated cell–cell communication from human large-scale single-cell and single-nucleus RNA-seq datasets. It infers LR interactions between sender/receiver cell types, computes **per-sample communication strength**, and supports association with phenotypes (e.g., aging, disease) as well as comprehensive visualization.
