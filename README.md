@@ -414,18 +414,9 @@ PopComm supports using curated LR tables. This package uses the **CellTalkDB** r
   3. Pass your table to the argument `lr_database`.
 
 
-## Performance & Reproducibility
+## Performance
 
 - **Parallelization**: Enable multi-core processing where supported by the package functions to speed up LR filtering and scoring on large datasets.
-- **Core thresholds (baseline values)**:
-  - `min_cells`: **50** (go **30–100** based on rarity/size; Seurat mode)
-  - `min_samples`: **10** (raise for heterogeneous cohorts)
-  - `min_cell_ratio`: **0.10** (Seurat mode)
-  - `min_sample_ratio`: **0.10**
-  - `cor_method`: **"spearman"**
-  - `min_cor`: **>0** (depending on stringency)
-  - `adjust_method`: **"BH"**
-  - `min_adjust_p`: **0.05**
 
 
 ## FAQ
@@ -443,11 +434,12 @@ PopComm supports using curated LR tables. This package uses the **CellTalkDB** r
 ## Cite PopComm & Database Resources
 
 **PopComm:**
- *A Population-Scale Single-Cell Atlas of the Human Heart Reveals Cellular Remodeling in Aging and Disease and Enables Cell–Cell Communication Analysis via PopComm.*
- (Add authors, journal, year, and DOI once available.)
+ *A Population-Scale Single-Cell Atlas of the Human Heart Reveals Cellular Remodeling and Cell–Cell Communication in Aging and Cardiac Disease*
+ (Submission in progress)
 
 **Database Source:**
-We thanks the CellTalk Database developed by Professor Xiaohui Fan. If you use the default LR database in PopComm, please also cite the orignal paper of [CellTalkDB](https://xomics.com.cn/celltalkdb/index.php): 
+We thanks the CellTalk Database developed by Professor Xiaohui Fan. If you use the default LR database in PopComm, please also cite the orignal paper of 
+[CellTalkDB](https://xomics.com.cn/celltalkdb/index.php): 
  **Shao X., Liao J., Li C., et al.** *[CellTalkDB: A manually curated database of ligand-receptor interactions in human and mouse](https://pubmed.ncbi.nlm.nih.gov/33147626/)*. **Briefings in Bioinformatics** (2021).
 
  
