@@ -13,9 +13,11 @@ boxplot_lr_group_comparison(
   receiver,
   group_by,
   score = c("normalized", "raw"),
+  show_counts = TRUE,
   test = TRUE,
   paired = FALSE,
   test_method = c("wilcox.test", "t.test"),
+  stat_label = c("p.signif", "p.format", "p.value", "none"),
   colors = c("#5fa9d1", "#154778"),
   title = NULL
 )
@@ -37,11 +39,15 @@ boxplot_lr_group_comparison(
 
 \item{score}{Use 'normalized' or 'raw' score (default: "normalized") (character).}
 
+\item{show_counts}{Show sample number per group (logical, default: TRUE).}
+
 \item{test}{Whether to add a statistical test annotation (logical, default: TRUE).}
 
 \item{paired}{Whether to treat the comparison as paired (logical, default: FALSE).}
 
 \item{test_method}{Statistical test to use: "t.test" or "wilcox.test" (default = "wilcox.test") (character).}
+
+\item{stat_label}{One of "p.signif","p.format","p.value","none" (default "p.signif").}
 
 \item{colors}{Vector of colors for groups (default: c("#5fa9d1", "#154778")).}
 

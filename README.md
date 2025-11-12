@@ -350,9 +350,11 @@ p_box <- boxplot_lr_group_comparison(
   receiver = "Fibroblast",
   group_by = "IFN_type",
   score = "normalized",          # <character> one of c("normalized", "raw")
+  show_counts = TRUE,
   test = TRUE,
   paired = FALSE,
   test_method = "wilcox.test"    # <character> one of c("wilcox.test", "t.test")
+  stat_label = "p.signif"        # <character> one of c("p.signif", "p.format", "p.value", "none")
   colors = c("#5fa9d1", "#154778"),
   title = NULL
 )

@@ -200,16 +200,23 @@ heatmap_sample <- function(lr_scores,
   }
   heatmap_title <- sprintf("%s\nSamples: %s, LRSR: %s", basic_title, n_samples_fmt, n_LRSR_fmt)
 
+  cluster_rows_flag <- nrow(heatmap_matrix) >= 2
+  cluster_cols_flag <- ncol(heatmap_matrix) >= 2
+
   # Plot the heatmap using pheatmap
   ph <- pheatmap(heatmap_matrix,
                  color = colorRampPalette(rev(brewer.pal(n = 7, name = "RdYlBu")))(100),
                  annotation_row = lr_annotations,
                  annotation_col = annotation_col,
                  annotation_colors = c(auto_annotation_row_colors, auto_annotation_col_colors),
-                 treeheight_row	= treeheight_row,
-                 treeheight_col = treeheight_col,
-                 cluster_rows = TRUE,
-                 cluster_cols = TRUE,
+                 # treeheight_row	= treeheight_row,
+                 # treeheight_col = treeheight_col,
+                 # cluster_rows = TRUE,
+                 # cluster_cols = TRUE,
+                 treeheight_row = if (cluster_rows_flag) treeheight_row else 0,
+                 treeheight_col = if (cluster_cols_flag) treeheight_col else 0,
+                 cluster_rows = cluster_rows_flag,
+                 cluster_cols = cluster_cols_flag,
                  show_rownames = show_LR,
                  show_colnames = show_sample,
                  labels_row = display_names,
@@ -383,9 +390,11 @@ pca_sample <- function(lr_scores,
 #' @param receiver Receiver cell type to filter (character).
 #' @param group_by Column name in \code{metadata} to group samples (character).
 #' @param score Use 'normalized' or 'raw' score (default: "normalized") (character).
+#' @param show_counts Show sample number per group (logical, default: TRUE).
 #' @param test Whether to add a statistical test annotation (logical, default: TRUE).
 #' @param paired Whether to treat the comparison as paired (logical, default: FALSE).
 #' @param test_method Statistical test to use: "t.test" or "wilcox.test" (default = "wilcox.test") (character).
+#' @param stat_label One of "p.signif","p.format","p.value","none" (default "p.signif").
 #' @param colors Vector of colors for groups (default: c("#5fa9d1", "#154778")).
 #' @param title Custom plot title (optional).
 #'
@@ -401,6 +410,7 @@ pca_sample <- function(lr_scores,
 #' @importFrom tibble rownames_to_column
 #' @importFrom ggpubr ggboxplot stat_compare_means
 #' @importFrom ggplot2 ggtitle xlab ylab theme_bw theme element_text element_blank element_line
+#' @importFrom rlang .data
 #'
 #' @examples
 #' # Boxplot of LR Score by group
@@ -425,15 +435,18 @@ boxplot_lr_group_comparison <- function(lr_scores, metadata,
                                         sender, receiver,
                                         group_by,
                                         score = c("normalized", "raw"),
+                                        show_counts = TRUE,
                                         test = TRUE,
                                         paired = FALSE,
                                         test_method = c("wilcox.test", "t.test"),
+                                        stat_label = c("p.signif", "p.format", "p.value", "none"),
                                         colors = c("#5fa9d1", "#154778"),
                                         title = NULL) {
 
   # Parameter validation
   test_method <- match.arg(test_method)
   score <- match.arg(score)
+  stat_label <- match.arg(stat_label)
   score_col <- ifelse(score == "normalized", "normalized_score", "score")
 
   # Check required columns
@@ -469,10 +482,23 @@ boxplot_lr_group_comparison <- function(lr_scores, metadata,
   df <- dplyr::left_join(df, metadata[, c("sample", group_by)], by = "sample")
 
   # Check group levels
-  if (length(unique(df[[group_by]])) < 2 && test) {
-    warning("Grouping variable has less than 2 levels, skipping statistical test")
-    test <- FALSE
+  # if (length(unique(df[[group_by]])) < 2 && test) {
+  #   warning("Grouping variable has less than 2 levels, skipping statistical test")
+  #   test <- FALSE
+  # }
+  grp <- df[[group_by]]
+  grp_non_na <- grp[!is.na(grp)]
+  n_levels <- length(unique(grp_non_na))
+  if (n_levels < 1) {
+    message("Grouping variable has no valid levels after merging metadata.")
+    return(NULL)
   }
+
+  # counts per group
+  n_df <- df %>%
+    dplyr::group_by(.data[[group_by]]) %>%
+    dplyr::summarise(n = dplyr::n(), .groups = "drop") %>%
+    dplyr::mutate(y = 1.08)
 
   # Default title
   if (is.null(title)) {
@@ -487,9 +513,20 @@ boxplot_lr_group_comparison <- function(lr_scores, metadata,
                  palette = colors,
                  add = "jitter",
                  add.params = list(shape = 16, alpha = 0.6)) +
-    ggplot2::ggtitle(title) +
-    ggplot2::xlab(group_by) +
-    ggplot2::ylab("Interaction Score") +
+    ggpubr::stat_compare_means(
+      method = test_method,
+      paired = paired,
+      label = ifelse(stat_label == "none", NULL, stat_label),
+      label.x.npc = 0.5,
+      label.y.npc = 0.9
+    ) +
+    ggplot2::coord_cartesian(ylim = c(0, 1.1)) +
+    ggplot2::scale_y_continuous(breaks = c(0, 0.25, 0.5, 0.75, 1)) +
+    ggplot2::geom_text(
+      data = n_df,
+      mapping = ggplot2::aes(x = .data[[group_by]], y = .data$y, label = paste0("n=", .data$n)),
+      vjust = 0
+    ) +
     ggplot2::theme_bw() +
     ggplot2::theme(
       panel.background = ggplot2::element_blank(),
@@ -500,17 +537,20 @@ boxplot_lr_group_comparison <- function(lr_scores, metadata,
                                           vjust = 0.5, hjust = 1),
       axis.text.y = ggplot2::element_text(color = "black"),
       legend.position = "none"
-    )
+    ) +
+    ggplot2::xlab(group_by) +
+    ggplot2::ylab("Interaction Score") +
+    ggplot2::ggtitle(title)
 
-  # Add significance test if enabled and valid
-  if (test && length(unique(df[[group_by]])) >= 2) {
-    p <- p + ggpubr::stat_compare_means(
-      method = test_method,
-      paired = paired,
-      label.x.npc = 0.5,
-      label.y.npc = 0.9
-    )
-  }
+  # # Add significance test if enabled and valid
+  # if (test && length(unique(df[[group_by]])) >= 2) {
+  #   p <- p + ggpubr::stat_compare_means(
+  #     method = test_method,
+  #     paired = paired,
+  #     label.x.npc = 0.5,
+  #     label.y.npc = 0.9
+  #   )
+  # }
 
   colnames(df)[colnames(df) == "sample"] <- "Sample"
   return(list(plot = p, df = df))

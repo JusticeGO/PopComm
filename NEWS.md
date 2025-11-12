@@ -29,3 +29,13 @@
 
 - Added support for average expression matrices. These functions now accept either Seurat objects or average expression matrices (a numeric matrix of gene expression where columns encode cell types and samples, and rows are genes).
 - No changes to existing Seurat-based workflows.
+
+
+## Version 1.0.1 (2025-11-12)
+
+### Changes in heatmap_sample(), boxplot_lr_group_comparison()
+
+- `heatmap_sample()`: Added an automatic clustering switch. When the number of rows or columns is less than 2, the corresponding `cluster_rows` or `cluster_cols` is automatically set to FALSE and the dendrogram height is set to 0, preventing `hclust` errors.
+- `boxplot_lr_group_comparison()`: Added two new parameters:
+`show_counts` — displays sample counts (`n=`) for each group (default `TRUE`).
+`stat_label` — allows flexible significance labeling styles: `"p.signif"` (asterisks), `"p.format"` (formatted p-value), `"p.value"` (raw p-value), or `"none"` (no significance label).
