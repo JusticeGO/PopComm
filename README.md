@@ -136,23 +136,23 @@ data(lr_db)
 
 ```r
 filtered_lr <- filter_lr_single(
-  rna             = matrix_object,
-  sender          = "Perivascular",
-  receiver        = "Endothelial",
-  lr_database     = lr_db,
-  cell_type_col   = 1,      # after splitting colnames by id_sep, cell type is part 1
-  sample_col      = 2,      # sample is part 2
-  id_sep          = "--",
-  min_samples     = 10,
-  min_sample_ratio= 0.1,
-  cor_method      = "spearman",
-  adjust_method   = "BH",
-  min_adjust_p    = 0.05,
-  min_cor         = 0,
-  min_r2          = 0,
-  min_fstat       = 0,
-  num_cores       = 10,
-  verbose         = TRUE
+  rna              = matrix_object,
+  sender           = "Perivascular",
+  receiver         = "Endothelial",
+  lr_database      = lr_db,
+  cell_type_col    = 1,      # after splitting colnames by id_sep, cell type is part 1
+  sample_col       = 2,      # sample is part 2
+  id_sep           = "--",
+  min_samples      = 10,
+  min_sample_ratio = 0.1,
+  cor_method       = "spearman",
+  adjust_method    = "BH",
+  min_adjust_p     = 0.05,
+  min_cor          = 0,
+  min_r2           = 0,
+  min_fstat        = 0,
+  num_cores        = 10,
+  verbose          = TRUE
 )
 
 if (is.null(filtered_lr) || nrow(filtered_lr) == 0L) {
@@ -179,15 +179,15 @@ head(filtered_lr)
 
 ```r
 lr_scores <- score_lr_single(
-  rna            = matrix_object,
-  sender         = "Perivascular",
-  receiver       = "Endothelial",
-  filtered_lr    = filtered_lr,
-  cell_type_col  = 1,
-  sample_col     = 2,
-  id_sep         = "--",
-  num_cores      = 10,
-  verbose        = TRUE
+  rna           = matrix_object,
+  sender        = "Perivascular",
+  receiver      = "Endothelial",
+  filtered_lr   = filtered_lr,
+  cell_type_col = 1,
+  sample_col    = 2,
+  id_sep        = "--",
+  num_cores     = 10,
+  verbose       = TRUE
 )
 
 if (is.null(lr_scores) || nrow(lr_scores) == 0L) {
@@ -215,20 +215,20 @@ head(lr_scores)
 
 ```r
 res_single <- one_step_single(
-  rna             = matrix_object,
-  sender          = "Perivascular",
-  receiver        = "Endothelial",
-  lr_database     = lr_db,
-  cell_type_col   = 1,
-  sample_col      = 2,
-  id_sep          = "--",
-  min_samples     = 10,
-  min_sample_ratio= 0.1,
-  cor_method      = "spearman",
-  adjust_method   = "BH",
-  min_adjust_p    = 0.05,
-  num_cores       = 10,
-  verbose         = TRUE
+  rna              = matrix_object,
+  sender           = "Perivascular",
+  receiver         = "Endothelial",
+  lr_database      = lr_db,
+  cell_type_col    = 1,
+  sample_col       = 2,
+  id_sep           = "--",
+  min_samples      = 10,
+  min_sample_ratio = 0.1,
+  cor_method       = "spearman",
+  adjust_method    = "BH",
+  min_adjust_p     = 0.05,
+  num_cores        = 10,
+  verbose          = TRUE
 )
 
 if (!is.null(res_single)) {
@@ -266,11 +266,11 @@ data(metadata_eg)
 
 ```r
 p_net <- circle_plot(
-  filtered_lr = filtered_lr_eg,
-  edge_width = "count",          # <character> one of c("count", "cor")
-  node_colors = NULL,
+  filtered_lr            = filtered_lr_eg,
+  edge_width             = "count",    # <character> one of c("count", "cor")
+  node_colors            = NULL,
   show_self_interactions = TRUE,
-  cutoff = 0
+  cutoff                 = 0
 )
 
 print(p_net)
@@ -283,9 +283,9 @@ print(p_net)
 ```r
 p_dot <- dot_plot(
   filtered_lr = filtered_lr_eg,
-  top_n = 5,
-  axis ="LR-SR",                 # <character> one of c("LR-SR", "SR-LR")
-  type_scale = "size",           # <character> one of c("size", "radius")
+  top_n       = 5,
+  axis        ="LR-SR",    # <character> one of c("LR-SR", "SR-LR")
+  type_scale  = "size",    # <character> one of c("size", "radius")
   selected_LR = NULL
 )
 
@@ -297,20 +297,23 @@ print(p_dot)
 #### `heatmap_sample`
 
 > This function generates a heatmap to visualize the LR interaction scores across samples. Rows represent LR pairs and columns represent samples. Optionally, sample metadata can be used to annotate the columns.
+Hierarchical clustering of samples and LRSR features was performed using 1 − Spearman correlation as the distance measure (pairwise.complete.obs) and average linkage, unless otherwise specified.
 
 ```r
 p_hm <- heatmap_sample(
-  lr_scores = lr_scores_eg,
-  metadata = metadata_eg,
-  score = "normalized",          # <character> one of c("normalized", "raw")
+  lr_scores         = lr_scores_eg,
+  metadata          = metadata_eg,
+  score             = "normalized",   # <character> one of c("normalized", "raw")
   selected_sender   = "Endothelial",
   selected_receiver = "Perivascular",
   selected_metadata = c("Sex", "Age_group", "IFN_type"),
-  treeheight_row = 50,
-  treeheight_col = 50,
-  show_LR     = FALSE,
-  show_sample = FALSE,
-  basic_title = NULL
+  treeheight_row    = 50,
+  treeheight_col    = 50,
+  show_LR           = FALSE,
+  show_sample       = FALSE,
+  basic_title       = NULL,
+  dist_method       = "correlation",   # <character> one of c("correlation", "euclidean")
+  clustering_method = "average"   # <character> one of c("average", "complete", "ward.D2", "single", "mcquitty", "median", "centroid")
 )
 
 print(p_hm)
@@ -322,12 +325,12 @@ print(p_hm)
 
 ```r
 pca_res <- pca_sample(
-  lr_scores = lr_scores_eg,
-  metadata = metadata_eg,
+  lr_scores         = lr_scores_eg,
+  metadata          = metadata_eg,
   selected_sender   = NULL,
   selected_receiver = NULL,
-  color_by = "IFN_type",
-  n_components = 2
+  color_by          = "IFN_type",
+  n_components      = 2
 )
 
 print(pca_res$plot)
@@ -342,21 +345,21 @@ head(pca_res$df)
 
 ```r
 p_box <- boxplot_lr_group_comparison(
-  lr_scores = lr_scores_eg,
-  metadata = metadata_eg,
-  ligand = "PSAP",
-  receptor = "LRP1",
-  sender = "Perivascular",
-  receiver = "Fibroblast",
-  group_by = "IFN_type",
-  score = "normalized",          # <character> one of c("normalized", "raw")
+  lr_scores   = lr_scores_eg,
+  metadata    = metadata_eg,
+  ligand      = "PSAP",
+  receptor    = "LRP1",
+  sender      = "Perivascular",
+  receiver    = "Fibroblast",
+  group_by    = "IFN_type",
+  score       = "normalized",    # <character> one of c("normalized", "raw")
   show_counts = TRUE,
-  test = TRUE,
-  paired = FALSE,
+  test        = TRUE,
+  paired      = FALSE,
   test_method = "wilcox.test"    # <character> one of c("wilcox.test", "t.test")
-  stat_label = "p.signif"        # <character> one of c("p.signif", "p.format", "p.value", "none")
-  colors = c("#5fa9d1", "#154778"),
-  title = NULL
+  stat_label  = "p.signif"       # <character> one of c("p.signif", "p.format", "p.value", "none")
+  colors      = c("#5fa9d1", "#154778"),
+  title       = NULL
 )
 
 print(p_box$plot)
@@ -369,18 +372,18 @@ head(p_box$df)
 
 ```r
 p_scatter <- dotplot_lr_continuous_group(
-  lr_scores = lr_scores_eg,
-  metadata = metadata_eg,
-  ligand = "HLA-A",
-  receptor = "LILRB2",
-  sender = "Lymphoid",
-  receiver = "Myeloid",
-  group_by = "IFNscore",
-  score = "normalized",          # <character> one of c("normalized", "raw")
-  point_size = 3,
-  point_color = "dodgerblue4",
+  lr_scores      = lr_scores_eg,
+  metadata       = metadata_eg,
+  ligand         = "HLA-A",
+  receptor       = "LILRB2",
+  sender         = "Lymphoid",
+  receiver       = "Myeloid",
+  group_by       = "IFNscore",
+  score          = "normalized",  # <character> one of c("normalized", "raw")
+  point_size     = 3,
+  point_color    = "dodgerblue4",
   add_regression = TRUE,
-  title = NULL
+  title          = NULL
 )
 
 print(p_scatter$plot)

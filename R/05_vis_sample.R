@@ -76,10 +76,17 @@ heatmap_sample <- function(lr_scores,
 
   # Create heatmap matrix
   heatmap_data <- lr_scores %>%
-    group_by(.data[["LRSR"]], sample) %>%
-    summarise(mean_score = mean(.data[[score_col]], na.rm = TRUE), .groups = "drop") %>%
-    pivot_wider(names_from = sample, values_from = mean_score, values_fill = list(mean_score = NA))
-    # pivot_wider(names_from = sample, values_from = mean_score, values_fill = list(mean_score = 0))
+    dplyr::transmute(
+      LRSR  = .data$LRSR,
+      sample = .data$sample,
+      score  = .data[[score_col]]
+    ) %>%
+    dplyr::arrange(.data$LRSR, .data$sample) %>%
+    tidyr::pivot_wider(
+      names_from  = sample,
+      values_from = score,
+      values_fill = list(score = NA)
+    )
 
   heatmap_matrix <- as.data.frame(heatmap_data)
   rownames(heatmap_matrix) <- heatmap_matrix$LRSR
@@ -302,6 +309,18 @@ pca_sample <- function(lr_scores,
     group_by(.data[["LRSR"]], sample) %>%
     summarise(mean_score = mean(.data[[score_col]], na.rm = TRUE), .groups = "drop") %>%
     pivot_wider(names_from = sample, values_from = mean_score, values_fill = list(mean_score = 0))
+  # pca_data <- lr_scores %>%
+  #   dplyr::transmute(
+  #     LRSR  = .data$LRSR,
+  #     sample = .data$sample,
+  #     score  = .data[[score_col]]
+  #   ) %>%
+  #   dplyr::arrange(.data$LRSR, .data$sample) %>%
+  #   tidyr::pivot_wider(
+  #     names_from  = sample,
+  #     values_from = score,
+  #     values_fill = list(score = NA)
+  #   )
 
   # Convert to a matrix with LRSR as row names, then transpose so that rows are samples and columns are features
   pca_matrix <- as.data.frame(pca_data)
@@ -533,8 +552,8 @@ boxplot_lr_group_comparison <- function(lr_scores, metadata,
       panel.grid = ggplot2::element_blank(),
       plot.title = ggplot2::element_text(hjust = 0.5),
       axis.title.y = ggplot2::element_text(color = "black"),
-      axis.text.x = ggplot2::element_text(color = "black", angle = 90,
-                                          vjust = 0.5, hjust = 1),
+      axis.text.x = ggplot2::element_text(color = "black", angle = 0,
+                                          vjust = 0.5, hjust = 0.5),
       axis.text.y = ggplot2::element_text(color = "black"),
       legend.position = "none"
     ) +
