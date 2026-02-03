@@ -336,11 +336,21 @@ one_step_single <- function(rna, sender, receiver, lr_database = PopComm::lr_db,
   # Unified steps
   rna.avg <- round(rna.avg, 5)
 
-  avg.s <- rna.avg[, grep(sender, colnames(rna.avg))]
-  avg.r <- rna.avg[, grep(receiver, colnames(rna.avg))]
+  # avg.s <- rna.avg[, grep(sender, colnames(rna.avg))]
+  # avg.r <- rna.avg[, grep(receiver, colnames(rna.avg))]
+
+  avg.s <- rna.avg[, endsWith(colnames(rna.avg), paste0("-lr-", sender)), drop = FALSE]
+  avg.r <- rna.avg[, endsWith(colnames(rna.avg), paste0("-lr-", receiver)), drop = FALSE]
 
   colnames(avg.s) <- str_match(colnames(avg.s), "^(.*)-lr-")[,2]
   colnames(avg.r) <- str_match(colnames(avg.r), "^(.*)-lr-")[,2]
+
+  if (any(duplicated(colnames(avg.s)))) {
+    stop("Duplicate sample names in avg.s after parsing. Check cell type matching pattern.")
+  }
+  if (any(duplicated(colnames(avg.r)))) {
+    stop("Duplicate sample names in avg.r after parsing. Check cell type matching pattern.")
+  }
 
   avg.r <- avg.r[, colnames(avg.s), drop = FALSE]
 

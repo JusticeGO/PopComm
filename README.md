@@ -445,7 +445,7 @@ We thanks the CellTalk Database developed by Professor Xiaohui Fan. If you use t
 [CellTalkDB](https://xomics.com.cn/celltalkdb/index.php): 
  **Shao X., Liao J., Li C., et al.** *[CellTalkDB: A manually curated database of ligand-receptor interactions in human and mouse](https://pubmed.ncbi.nlm.nih.gov/33147626/)*. **Briefings in Bioinformatics** (2021).
 
- 
+
 ## License
 
 PopComm is released under the **MIT License**.

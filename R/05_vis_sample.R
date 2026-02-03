@@ -544,17 +544,18 @@ boxplot_lr_group_comparison <- function(lr_scores, metadata,
     ggplot2::geom_text(
       data = n_df,
       mapping = ggplot2::aes(x = .data[[group_by]], y = .data$y, label = paste0("n=", .data$n)),
-      vjust = 0
+      vjust = 0,
+      size = 3
     ) +
     ggplot2::theme_bw() +
     ggplot2::theme(
       panel.background = ggplot2::element_blank(),
       panel.grid = ggplot2::element_blank(),
-      plot.title = ggplot2::element_text(hjust = 0.5),
-      axis.title.y = ggplot2::element_text(color = "black"),
-      axis.text.x = ggplot2::element_text(color = "black", angle = 0,
-                                          vjust = 0.5, hjust = 0.5),
-      axis.text.y = ggplot2::element_text(color = "black"),
+      plot.title = ggplot2::element_text(hjust = 0.5, color = "black", size = 10),
+      axis.title.x = ggplot2::element_text(color = "black", size = 10),
+      axis.title.y = ggplot2::element_text(color = "black", size = 10),
+      axis.text.x = ggplot2::element_text(color = "black", size = 8),
+      axis.text.y = ggplot2::element_text(color = "black", size = 8),
       legend.position = "none"
     ) +
     ggplot2::xlab(group_by) +
