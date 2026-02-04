@@ -33,7 +33,7 @@
 
 ## Version 1.0.1 (2026-02-03)
 
-### Bug fixes score_lr_single(), one_step_single()
+### Bug fixes filter_lr_single(), score_lr_single(), one_step_single()
 
 - Fixed duplicated samples in projection scores caused by overlapping sender or receiver cell type names.
 - Replaced substring-based column matching with exact suffix matching for sender and receiver average expression.
